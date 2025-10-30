@@ -3,6 +3,7 @@ let score = 0;
 let selectedOption = null;
 let questions = [];
 
+// Referencias a elementos HTML
 const startBtn = document.getElementById("startBtn");
 const quizScreen = document.getElementById("quizScreen");
 const startScreen = document.getElementById("startScreen");
@@ -29,10 +30,64 @@ function startGame() {
     quizScreen.classList.remove("hidden");
     score = 0;
     currentQuestion = 0;
+
+    // Intenta cargar preguntas desde el archivo JSON
     fetch("data/questions.json")
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Network error, using backup questions");
+            }
+            return response.json();
+        })
         .then(data => {
             questions = data;
+            loadQuestion();
+            updateScore();
+        })
+        // Si falla (por ejemplo en GitHub Pages), usa backup integrado
+        .catch(() => {
+            questions = [
+                {
+                    question: "What does INEC stand for in Nigeria?",
+                    options: [
+                        "International Electoral Council",
+                        "Independent National Electoral Commission",
+                        "National Voters Committee",
+                        "Institute of Elections Nigeria"
+                    ],
+                    correct: 1,
+                    explanation: "INEC means 'Independent National Electoral Commission'. It conducts and oversees elections in Nigeria."
+                },
+                {
+                    question: "At what age can a Nigerian citizen register to vote?",
+                    options: ["16 years", "17 years", "18 years", "21 years"],
+                    correct: 2,
+                    explanation: "Citizens must be at least 18 years old to vote according to the Nigerian Constitution."
+                },
+                {
+                    question: "Which document is known as the supreme law of Nigeria?",
+                    options: ["Penal Code", "The Constitution", "Electoral Act", "Public Order Act"],
+                    correct: 1,
+                    explanation: "The Constitution is the highest law of Nigeria. All other laws derive their authority from it."
+                },
+                {
+                    question: "Which organization promotes youth civic participation in Nigeria?",
+                    options: ["YIAGA Africa", "World Bank", "UNESCO", "Naira Club"],
+                    correct: 0,
+                    explanation: "YIAGA Africa runs civic engagement and democracy programs for Nigerian youth."
+                },
+                {
+                    question: "What is one key responsibility of Nigerian citizens?",
+                    options: [
+                        "To obey traffic laws only",
+                        "To participate in civic and national duties",
+                        "To pay no attention to elections",
+                        "To avoid community service"
+                    ],
+                    correct: 1,
+                    explanation: "Citizens are expected to participate in civic duties like voting and community service."
+                }
+            ];
             loadQuestion();
             updateScore();
         });
