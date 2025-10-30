@@ -89,3 +89,19 @@ footer {
     background: #eee;
     font-size: 0.8rem;
 }
+
+/* CivicPlay Logo Styling */
+.logo {
+    width: 120px;
+    /* Set a fixed width for the logo */
+    height: auto;
+    /* Keep proportions automatically */
+    border-radius: 12px;
+    /* Smooth rounded corners */
+    display: block;
+    /* Allows centering with margin auto */
+    margin: 0.5rem auto;
+    /* Centers the logo horizontally */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    /* Adds a soft shadow under the logo */
+}
