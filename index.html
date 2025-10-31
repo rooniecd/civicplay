@@ -1,61 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CivicPlay | Play. Learn. Build Africa’s Future</title>
-  <link rel="stylesheet" href="css/styles.css" />
-  <script src="scripts/quiz.js" defer></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CivicPlay | Play. Learn. Build Africa’s Future</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <script src="scripts/quiz.js" defer></script>
 </head>
 
 <body>
-  <!-- Header -->
-  <header>
-    <img src="assets/logo.jpg" alt="CivicPlay Logo" class="logo" />
-    <h1>CivicPlay</h1>
-    <p>Play. Learn. Build Africa’s Future.</p>
-  </header>
+    <!-- Header -->
+    <header>
+        <img src="assets/logo.jpg" alt="CivicPlay Logo" class="logo" />
+        <h1>CivicPlay</h1>
+        <p>Play. Learn. Build Africa’s Future.</p>
+    </header>
 
-  <!-- Main Game Container -->
-  <main id="gameContainer">
-    <!-- Start Screen -->
-    <section id="startScreen">
-      <h2>Welcome, Citizen!</h2>
-      <p>Test your civic knowledge and become a democracy defender.</p>
-      <button id="startBtn">Start Game ▶</button>
-    </section>
+    <!-- Main Game Container -->
+    <main id="gameContainer">
+        <!-- Start Screen -->
+        <section id="startScreen">
+            <h2>Welcome, Citizen!</h2>
+            <p>Test your civic knowledge and become a democracy defender.</p>
+            <button id="startBtn">Start Game ▶</button>
+        </section>
 
-    <!-- Quiz Screen -->
-    <section id="quizScreen" class="hidden">
-      <div id="scoreDisplay">Score: <span id="scoreValue">0</span></div>
-      <h2 id="questionText"></h2>
-      <div id="optionsContainer"></div>
-      <button id="submitBtn">Submit Answer</button>
-    </section>
+        <!-- Quiz Screen -->
+        <section id="quizScreen" class="hidden">
+            <div id="scoreDisplay">Score: <span id="scoreValue">0</span></div>
+            <h2 id="questionText"></h2>
+            <div id="optionsContainer"></div>
+            <button id="submitBtn">Submit Answer</button>
+        </section>
 
-    <!-- Feedback Screen -->
-    <section id="feedbackScreen" class="hidden">
-      <p id="feedbackText"></p>
-      <p id="explanationText"></p>
-      <button id="nextBtn">Next ▶</button>
-    </section>
+        <!-- Feedback Screen -->
+        <section id="feedbackScreen" class="hidden">
+            <p id="feedbackText"></p>
+            <p id="explanationText"></p>
+            <button id="nextBtn">Next ▶</button>
+        </section>
 
-    <!-- End Screen -->
-    <section id="endScreen" class="hidden">
-      <h2>Great job, Civic Leader!</h2>
-      <p>Your Final Score: <span id="finalScore">0</span></p>
-      <div id="leaderboard"></div>
-      <button id="restartBtn">Play Again</button>
-    </section>
-  </main>
+        <!-- End Screen -->
+        <section id="endScreen" class="hidden">
+            <h2>Great job, Civic Leader!</h2>
+            <p>Your Final Score: <span id="finalScore">0</span></p>
+            <div id="leaderboard"></div>
+            <button id="restartBtn">Play Again</button>
+        </section>
+    </main>
 
-  <!-- Footer -->
-  <footer style="text-align:center; background:#f4f9f6; padding:1rem; margin-top:2rem;">
-    <p style="margin:0; font-weight:600;">© 2025 CivicPlay | Built for Africa’s Youth</p>
-    <p style="font-size:0.9rem; color:#2e7d32; margin-top:4px;">
-      Powered by <a href="https://roundcheck.com" target="_blank" style="color:#006400; text-decoration:none; font-weight:700;">
-      RoundCheck</a>
-    </p>
-  </footer>
+    <!-- Footer -->
+    <footer style="text-align:center; background:#f4f9f6; padding:1rem; margin-top:2rem;">
+        <p style="margin:0; font-weight:600;">© 2025 CivicPlay | Built for Africa’s Youth</p>
+        <p style="font-size:0.9rem; color:#2e7d32; margin-top:4px;">
+            Powered by
+            <a href="https://www.roundcheck.com.ng" target="_blank"
+                style="color:#006400; text-decoration:none; font-weight:700;">
+                RoundCheck
+            </a>
+        </p>
+        <p style="font-size:0.85rem; color:#555; margin-top:-4px;">
+            <a href="https://www.roundcheck.com.ng" target="_blank" style="color:#006400; text-decoration:none;">
+                www.roundcheck.com.ng
+            </a>
+        </p>
+    </footer>
 </body>
+
 </html>
