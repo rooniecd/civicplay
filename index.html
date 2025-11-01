@@ -10,61 +10,78 @@
 </head>
 
 <body>
-    <!-- Header -->
     <header>
         <img src="assets/logo.jpg" alt="CivicPlay Logo" class="logo" />
         <h1>CivicPlay</h1>
         <p>Play. Learn. Build Africa’s Future.</p>
     </header>
 
-    <!-- Main Game Container -->
     <main id="gameContainer">
-        <!-- Start Screen -->
+        <!-- Level Select -->
         <section id="startScreen">
-            <h2>Welcome, Citizen!</h2>
-            <p>Test your civic knowledge and become a democracy defender.</p>
-            <button id="startBtn">Start Game ▶</button>
+            <h2>Select Your Level</h2>
+            <p>Earn points to unlock higher levels.</p>
+            <div class="levels">
+                <button id="basicBtn" class="levelBtn">Basic</button>
+                <button id="intermediaryBtn" class="levelBtn locked" disabled>Intermediary</button>
+                <button id="advanceBtn" class="levelBtn locked" disabled>Advance</button>
+            </div>
+            <div id="unlockInfo" class="hint">
+                Intermediary unlocks at 30 pts in Basic • Advance unlocks at 30 pts in Intermediary
+            </div>
         </section>
 
-        <!-- Quiz Screen -->
+        <!-- Quiz -->
         <section id="quizScreen" class="hidden">
-            <div id="scoreDisplay">Score: <span id="scoreValue">0</span></div>
+            <div class="quizHeader">
+                <div id="levelBadge">Level: <span id="levelName">Basic</span></div>
+                <div id="scoreDisplay">Score: <span id="scoreValue">0</span></div>
+            </div>
+
+            <div class="progressWrap">
+                <div id="progressFill"></div>
+            </div>
+            <div id="progressLabel">0 / 0</div>
+
             <h2 id="questionText"></h2>
             <div id="optionsContainer"></div>
-            <button id="submitBtn">Submit Answer</button>
+
+            <div class="quizActions">
+                <div class="actionRow">
+                    <button id="prevBtn" class="secondary">Previous</button>
+                    <button id="submitBtn">Submit Answer</button>
+                    <button id="nextBtn" class="secondary">Next</button>
+                </div>
+                <div class="restartRow">
+                    <button id="restartLevelBtn" class="ghost">Restart Level</button>
+                </div>
+            </div>
         </section>
 
-        <!-- Feedback Screen -->
+        <!-- Feedback -->
         <section id="feedbackScreen" class="hidden">
             <p id="feedbackText"></p>
             <p id="explanationText"></p>
-            <button id="nextBtn">Next ▶</button>
+            <button id="nextAfterFeedbackBtn">Next ▶</button>
         </section>
 
-        <!-- End Screen -->
+        <!-- End -->
         <section id="endScreen" class="hidden">
-            <h2>Great job, Civic Leader!</h2>
-            <p>Your Final Score: <span id="finalScore">0</span></p>
+            <h2>Well done!</h2>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <div id="unlockMessage" class="hint"></div>
             <div id="leaderboard"></div>
-            <button id="restartBtn">Play Again</button>
+            <div class="endActions">
+                <button id="restartBtn">Play Again</button>
+                <button id="backToLevelsBtn" class="secondary">Back to Levels</button>
+                <button id="nextLevelBtn" class="success hidden">Go to Next Level</button>
+            </div>
         </section>
     </main>
 
-    <!-- Footer -->
-    <footer style="text-align:center; background:#f4f9f6; padding:1rem; margin-top:2rem;">
-        <p style="margin:0; font-weight:600;">© 2025 CivicPlay | Built for Africa’s Youth</p>
-        <p style="font-size:0.9rem; color:#2e7d32; margin-top:4px;">
-            Powered by
-            <a href="https://www.roundcheck.com.ng" target="_blank"
-                style="color:#006400; text-decoration:none; font-weight:700;">
-                RoundCheck
-            </a>
-        </p>
-        <p style="font-size:0.85rem; color:#555; margin-top:-4px;">
-            <a href="https://www.roundcheck.com.ng" target="_blank" style="color:#006400; text-decoration:none;">
-                www.roundcheck.com.ng
-            </a>
-        </p>
+    <footer>
+        <p>© 2025 CivicPlay | Built for Africa’s Youth</p>
+        <p>Powered by <a href="https://www.roundcheck.com.ng" target="_blank">RoundCheck</a></p>
     </footer>
 </body>
 
