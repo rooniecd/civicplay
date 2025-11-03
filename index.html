@@ -20,14 +20,14 @@
         <!-- Level Select -->
         <section id="startScreen">
             <h2>Select Your Level</h2>
-            <p>Earn points to unlock higher levels.</p>
+            <p>Answer all questions, then submit at the end</p>
             <div class="levels">
                 <button id="basicBtn" class="levelBtn">Basic</button>
                 <button id="intermediaryBtn" class="levelBtn locked" disabled>Intermediary</button>
                 <button id="advanceBtn" class="levelBtn locked" disabled>Advance</button>
             </div>
             <div id="unlockInfo" class="hint">
-                Intermediary unlocks at 30 pts in Basic • Advance unlocks at 30 pts in Intermediary
+                Unlock next level by scoring at least 60% on the current level
             </div>
         </section>
 
@@ -41,7 +41,7 @@
             <div class="progressWrap">
                 <div id="progressFill"></div>
             </div>
-            <div id="progressLabel">0 / 0</div>
+            <div id="progressLabel">Question <span id="qIndex">1</span> / <span id="qTotal">15</span></div>
 
             <h2 id="questionText"></h2>
             <div id="optionsContainer"></div>
@@ -49,20 +49,13 @@
             <div class="quizActions">
                 <div class="actionRow">
                     <button id="prevBtn" class="secondary">Previous</button>
-                    <button id="submitBtn">Submit Answer</button>
-                    <button id="nextBtn" class="secondary">Next</button>
+                    <button id="nextBtn" class="secondary" disabled>Next</button>
+                    <button id="submitAllBtn" class="success hidden">Submit All</button>
                 </div>
                 <div class="restartRow">
                     <button id="restartLevelBtn" class="ghost">Restart Level</button>
                 </div>
             </div>
-        </section>
-
-        <!-- Feedback -->
-        <section id="feedbackScreen" class="hidden">
-            <p id="feedbackText"></p>
-            <p id="explanationText"></p>
-            <button id="nextAfterFeedbackBtn">Next ▶</button>
         </section>
 
         <!-- End -->

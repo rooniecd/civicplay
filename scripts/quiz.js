@@ -1,177 +1,122 @@
 document.addEventListener("DOMContentLoaded", () => {
+    // Screens
     const startScreen = document.getElementById("startScreen");
     const quizScreen = document.getElementById("quizScreen");
-    const feedbackScreen = document.getElementById("feedbackScreen");
     const endScreen = document.getElementById("endScreen");
 
+    // Level buttons
     const basicBtn = document.getElementById("basicBtn");
     const intermediaryBtn = document.getElementById("intermediaryBtn");
     const advanceBtn = document.getElementById("advanceBtn");
 
+    // Quiz UI
+    const levelNameEl = document.getElementById("levelName");
     const questionText = document.getElementById("questionText");
     const optionsContainer = document.getElementById("optionsContainer");
-
     const prevBtn = document.getElementById("prevBtn");
-    const submitBtn = document.getElementById("submitBtn");
     const nextBtn = document.getElementById("nextBtn");
+    const submitAllBtn = document.getElementById("submitAllBtn");
     const restartLevelBtn = document.getElementById("restartLevelBtn");
 
-    const nextAfterFeedbackBtn = document.getElementById("nextAfterFeedbackBtn");
+    // Progress + score
+    const qIndexEl = document.getElementById("qIndex");
+    const qTotalEl = document.getElementById("qTotal");
+    const progressFill = document.getElementById("progressFill");
+    const scoreValue = document.getElementById("scoreValue");
+
+    // End UI
+    const finalScore = document.getElementById("finalScore");
+    const unlockMessage = document.getElementById("unlockMessage");
+    const leaderboardDiv = document.getElementById("leaderboard");
     const restartBtn = document.getElementById("restartBtn");
     const backToLevelsBtn = document.getElementById("backToLevelsBtn");
     const nextLevelBtn = document.getElementById("nextLevelBtn");
 
-    const feedbackText = document.getElementById("feedbackText");
-    const explanationText = document.getElementById("explanationText");
-    const scoreValue = document.getElementById("scoreValue");
-    const finalScore = document.getElementById("finalScore");
-    const leaderboardDiv = document.getElementById("leaderboard");
-    const levelNameEl = document.getElementById("levelName");
-    const unlockMessage = document.getElementById("unlockMessage");
-
-    const progressFill = document.getElementById("progressFill");
-    const progressLabel = document.getElementById("progressLabel");
-
+    // State
     let currentLevel = "Basic";
-    let currentQuestion = 0;
+    let questions = [];
+    let currentIndex = 0;
+    let selectedTemp = null; // current selection before locking
+    let answers = [];        // locked answers by index (or null)
+    let locked = [];         // boolean per question: true after NEXT
     let score = 0;
-    let selectedOption = null;
 
-    let answers = [];
-    let answeredFlags = [];
-    let furthestIndex = 0;
+    // Sounds (playful)
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioCtx();
+    const playTone = (freq = 440, dur = 0.12, type = "sine", vol = 0.06) => {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = type;
+        o.frequency.value = freq;
+        g.gain.value = vol;
+        o.connect(g); g.connect(ctx.destination);
+        o.start();
+        setTimeout(() => o.stop(), dur * 1000);
+    };
+    const sClick = () => { playTone(520, 0.08, "triangle", 0.05); };
+    const sSuccess = () => { playTone(700, 0.12, "sine", 0.07); setTimeout(() => playTone(900, 0.12, "sine", 0.07), 120); };
+    const sFail = () => { playTone(250, 0.14, "sawtooth", 0.06); };
 
-    const UNLOCK_THRESHOLD = 30;
+    // Unlock threshold: 60% correct
+    const PERCENT_TO_UNLOCK = 0.6;
 
-    const basicQuestions = [
-        {
-            question: "What does INEC stand for in Nigeria?",
-            options: [
-                "International Electoral Council",
-                "Independent National Electoral Commission",
-                "National Voters Committee",
-                "Institute of Elections Nigeria"
-            ],
-            correct: 1,
-            explanation: "INEC means 'Independent National Electoral Commission'. It conducts and oversees elections in Nigeria."
-        },
-        {
-            question: "At what age can a Nigerian citizen register to vote?",
-            options: ["16 years", "17 years", "18 years", "21 years"],
-            correct: 2,
-            explanation: "Citizens must be at least 18 years old to vote according to the Nigerian Constitution."
-        },
-        {
-            question: "Which document is known as the supreme law of Nigeria?",
-            options: ["Penal Code", "The Constitution", "Electoral Act", "Public Order Act"],
-            correct: 1,
-            explanation: "The Constitution is the highest law of Nigeria. All other laws derive their authority from it."
-        },
-        {
-            question: "Which organization promotes youth civic participation in Nigeria?",
-            options: ["YIAGA Africa", "World Bank", "UNESCO", "Naira Club"],
-            correct: 0,
-            explanation: "YIAGA Africa runs civic engagement and democracy programs for Nigerian youth."
-        },
-        {
-            question: "What is one key responsibility of Nigerian citizens?",
-            options: [
-                "To obey traffic laws only",
-                "To participate in civic and national duties",
-                "To pay no attention to elections",
-                "To avoid community service"
-            ],
-            correct: 1,
-            explanation: "Citizens are expected to participate in civic duties like voting and community service."
-        }
+    // Question banks (15 each)
+    const BASIC_QUESTIONS = [
+        { q: "What does INEC stand for in Nigeria?", a: ["International Electoral Council", "Independent National Electoral Commission", "National Voters Committee", "Institute of Elections Nigeria"], c: 1 },
+        { q: "What is the minimum voting age in Nigeria?", a: ["16", "17", "18", "19"], c: 2 },
+        { q: "Which document is the supreme law of Nigeria?", a: ["Penal Code", "The Constitution", "Electoral Act", "Public Order Act"], c: 1 },
+        { q: "Which body registers political parties in Nigeria?", a: ["National Assembly", "INEC", "Supreme Court", "Ministry of Justice"], c: 1 },
+        { q: "Local government primarily handles which service?", a: ["Foreign policy", "Primary health and sanitation", "National defense", "Monetary policy"], c: 1 },
+        { q: "Which law guides election procedures in Nigeria?", a: ["Penal Code", "Electoral Act", "Companies Act", "Evidence Act"], c: 1 },
+        { q: "A key civic duty for citizens is to", a: ["Avoid tax", "Ignore jury service", "Vote and obey the law", "Undermine public order"], c: 2 },
+        { q: "At elections, who organizes and supervises the process?", a: ["INEC", "National Assembly", "Judiciary", "Police Service Commission"], c: 0 },
+        { q: "Which branch interprets the laws?", a: ["Executive", "Legislature", "Judiciary", "Civil Service"], c: 2 },
+        { q: "What does media and information literacy help citizens do?", a: ["Accept information without verifying", "Identify credible sources", "Ignore civic duties", "Rely on rumors"], c: 1 },
+        { q: "Citizens should participate in community service because it", a: ["Replaces elections", "Builds social responsibility", "Eliminates taxes", "Removes laws"], c: 1 },
+        { q: "Nigeria practices which system of government?", a: ["Unitary", "Confederal", "Federal", "Absolute monarchy"], c: 2 },
+        { q: "What is the permanent voter’s card commonly called?", a: ["PVC", "NIN", "TIN", "BVN"], c: 0 },
+        { q: "The Electoral Act mainly contains", a: ["Tax rules", "Election procedures", "Military codes", "Trade policies"], c: 1 },
+        { q: "Youth engagement in democracy is important because it", a: ["Reduces turnout", "Weakens institutions", "Builds accountable leadership", "Eliminates debates"], c: 2 }
     ];
 
-    const intermediaryQuestions = [
-        {
-            question: "Which body registers political parties in Nigeria?",
-            options: ["National Assembly", "INEC", "Supreme Court", "Ministry of Justice"],
-            correct: 1,
-            explanation: "INEC registers political parties and oversees compliance during elections."
-        },
-        {
-            question: "What is the minimum voting age in Nigeria?",
-            options: ["16", "17", "18", "19"],
-            correct: 2,
-            explanation: "The minimum voting age is 18 as stated in the Constitution."
-        },
-        {
-            question: "Local government primarily handles which of these?",
-            options: ["Foreign policy", "Primary health and sanitation", "National defense", "Monetary policy"],
-            correct: 1,
-            explanation: "Local governments manage community services like primary health, sanitation and markets."
-        },
-        {
-            question: "Which law guides election procedures in Nigeria?",
-            options: ["Penal Code", "Electoral Act", "Companies Act", "Evidence Act"],
-            correct: 1,
-            explanation: "The Electoral Act outlines procedures and guidelines for conducting elections."
-        },
-        {
-            question: "Which is a key civic duty?",
-            options: ["Ignoring jury service", "Avoiding tax", "Voting and obeying the law", "Undermining public order"],
-            correct: 2,
-            explanation: "Voting, paying taxes, and obeying the law are core civic duties."
-        }
+    const INTERMEDIARY_QUESTIONS = [
+        { q: "Which section of the Constitution lists INEC among federal bodies?", a: ["Section 6", "Section 153", "Section 1", "Section 217"], c: 1 },
+        { q: "Under the Third Schedule, INEC can", a: ["Appoint judges", "Conduct and supervise elections", "Pass national budgets", "Command the armed forces"], c: 1 },
+        { q: "Separation of powers ensures that the Executive", a: ["Interprets laws", "Makes laws", "Enforces laws", "Selects juries"], c: 2 },
+        { q: "State governments are primarily responsible for", a: ["Foreign affairs", "Secondary education policy", "Printing currency", "Defense"], c: 1 },
+        { q: "A free and fair election includes", a: ["Intimidation", "Transparent counting", "Ballot stuffing", "Violence"], c: 1 },
+        { q: "The Nigerian Senate is part of the", a: ["Judiciary", "Executive", "Legislature", "Civil Service"], c: 2 },
+        { q: "The Constitution protects fundamental rights such as", a: ["Right to fair hearing", "Right to arbitrary arrest", "Right to censorship", "Right to misinformation"], c: 0 },
+        { q: "Which ID is commonly required to register for PVC?", a: ["BVN only", "International passport only", "Any valid recognized ID", "No ID"], c: 2 },
+        { q: "Primary responsibility of citizens during elections is to", a: ["Sell votes", "Participate peacefully and vote", "Disrupt polling units", "Avoid registration"], c: 1 },
+        { q: "Civic engagement includes", a: ["Spreading fake news", "Community meetings", "Inciting violence", "Ignoring local issues"], c: 1 },
+        { q: "The Judiciary’s independence helps to", a: ["Politicize trials", "Ensure rule of law", "Eliminate courts", "Control elections"], c: 1 },
+        { q: "What is the role of polling officials?", a: ["Campaigning for parties", "Maintaining order and counting votes", "Altering results", "Ignoring procedures"], c: 1 },
+        { q: "Which court is the highest in Nigeria?", a: ["Court of Appeal", "Supreme Court", "High Court", "National Industrial Court"], c: 1 },
+        { q: "A credible source when verifying claims is", a: ["Anonymous blog", "Official government or INEC site", "Random WhatsApp forward", "Unverified meme page"], c: 1 },
+        { q: "Civic education in schools helps students", a: ["Avoid participation", "Understand rights and duties", "Ignore governance", "Reject responsibility"], c: 1 }
     ];
 
-    const advanceQuestions = [
-        {
-            question: "Which section of the Nigerian Constitution establishes INEC?",
-            options: ["Section 6", "Section 153", "Section 1", "Section 217"],
-            correct: 1,
-            explanation: "INEC is listed among Federal Executive Bodies in Section 153 of the 1999 Constitution (as amended)."
-        },
-        {
-            question: "What is a key power of INEC under the Third Schedule?",
-            options: [
-                "Appointing judges",
-                "Conducting and supervising elections",
-                "Passing national budgets",
-                "Commanding the armed forces"
-            ],
-            correct: 1,
-            explanation: "The Third Schedule assigns INEC functions including organizing and supervising elections."
-        },
-        {
-            question: "Which statement about separation of powers is correct?",
-            options: [
-                "The Executive makes laws",
-                "The Legislature interprets laws",
-                "The Judiciary interprets laws",
-                "The Judiciary appoints ministers"
-            ],
-            correct: 2,
-            explanation: "The Judiciary interprets laws; the Legislature makes them; the Executive enforces them."
-        },
-        {
-            question: "Which best describes federalism in Nigeria?",
-            options: [
-                "A unitary system",
-                "Power shared between federal and state governments",
-                "Only local governments rule",
-                "All power to traditional rulers"
-            ],
-            correct: 1,
-            explanation: "Nigeria is a federation where power is shared between federal and state governments."
-        },
-        {
-            question: "What does media and information literacy help citizens do?",
-            options: [
-                "Accept information without verifying",
-                "Identify credible sources and spot misinformation",
-                "Ignore civic duties",
-                "Rely only on rumors"
-            ],
-            correct: 1,
-            explanation: "MIL helps citizens evaluate sources, verify claims, and resist misinformation."
-        }
+    const ADVANCE_QUESTIONS = [
+        { q: "Federalism in Nigeria means", a: ["Unitary rule", "Power shared between federal and states", "Only local governments rule", "All power to traditional rulers"], c: 1 },
+        { q: "Which document outlines citizen rights in detail?", a: ["The Constitution (Chapter IV)", "Company and Allied Matters Act", "Penal Code", "Evidence Act"], c: 0 },
+        { q: "A hallmark of credible elections is", a: ["Ballot snatching", "Voter suppression", "Transparent collation", "Violence"], c: 2 },
+        { q: "Media literacy helps voters to", a: ["Believe everything", "Spot manipulation and bias", "Avoid information", "Rely on rumors"], c: 1 },
+        { q: "In Nigeria, who assents to bills passed by the National Assembly?", a: ["Chief Justice", "President", "INEC Chair", "Inspector General"], c: 1 },
+        { q: "An impeachment is conducted by the", a: ["Judiciary alone", "Legislature following constitutional process", "Military council", "Electoral umpire"], c: 1 },
+        { q: "Budget appropriation power lies with the", a: ["Judiciary", "Legislature", "Police", "INEC"], c: 1 },
+        { q: "Which is NOT a civic duty?", a: ["Paying taxes", "Obeying laws", "Serving the nation if required", "Spreading disinformation"], c: 3 },
+        { q: "Which principle guards against concentration of power?", a: ["Centralization", "Separation of powers", "Autocracy", "Oligarchy"], c: 1 },
+        { q: "Petitions on election results are handled by", a: ["Markets", "Electoral tribunals", "Local chiefs", "Social media"], c: 1 },
+        { q: "An informed electorate relies on", a: ["Verified data and credible sources", "Rumors", "Hearsay", "Satire"], c: 0 },
+        { q: "Freedom of expression allows citizens to", a: ["Incite violence", "Criticize within the law", "Defame freely", "Publish hate speech"], c: 1 },
+        { q: "INEC’s mandate includes", a: ["Drafting the Constitution", "Conducting elections", "Appointing ministers", "Passing laws"], c: 1 },
+        { q: "Rule of law implies", a: ["No one is above the law", "Leaders are above the law", "Laws are optional", "Only citizens obey"], c: 0 },
+        { q: "A peaceful transfer of power strengthens", a: ["Democratic stability", "Dictatorship", "Lawlessness", "Anarchy"], c: 0 }
     ];
 
+    // Progress storage per level
     function getStoredProgress() {
         try {
             const data = JSON.parse(localStorage.getItem("civicplay_progress")) || {};
@@ -184,237 +129,236 @@ document.addEventListener("DOMContentLoaded", () => {
             return { basicBest: 0, intermediaryBest: 0, advanceBest: 0 };
         }
     }
-
-    function setStoredProgress(progress) {
-        localStorage.setItem("civicplay_progress", JSON.stringify(progress));
+    function setStoredProgress(p) {
+        localStorage.setItem("civicplay_progress", JSON.stringify(p));
     }
-
     function applyLocks() {
-        const { basicBest, intermediaryBest } = getStoredProgress();
-        if (basicBest >= UNLOCK_THRESHOLD) {
+        const p = getStoredProgress();
+        const basicUnlock = Math.round(BASIC_QUESTIONS.length * 10 * PERCENT_TO_UNLOCK);
+        const interUnlock = Math.round(INTERMEDIARY_QUESTIONS.length * 10 * PERCENT_TO_UNLOCK);
+        if (p.basicBest >= basicUnlock) {
             intermediaryBtn.classList.remove("locked");
             intermediaryBtn.removeAttribute("disabled");
         }
-        if (intermediaryBest >= UNLOCK_THRESHOLD) {
+        if (p.intermediaryBest >= interUnlock) {
             advanceBtn.classList.remove("locked");
             advanceBtn.removeAttribute("disabled");
         }
     }
 
-    function getQuestionsByLevel() {
-        if (currentLevel === "Basic") return basicQuestions;
-        if (currentLevel === "Intermediary") return intermediaryQuestions;
-        return advanceQuestions;
-    }
-
-    function initStateForLevel(total) {
-        answers = new Array(total).fill(null);
-        answeredFlags = new Array(total).fill(false);
-        furthestIndex = 0;
-        selectedOption = null;
-        score = 0;
-        currentQuestion = 0;
-        updateScore();
-        updateProgress();
-    }
-
+    // Start a level
     function startLevel(level) {
         currentLevel = level;
         levelNameEl.textContent = currentLevel;
+        questions = (level === "Basic") ? BASIC_QUESTIONS
+            : (level === "Intermediary") ? INTERMEDIARY_QUESTIONS
+                : ADVANCE_QUESTIONS;
+
+        answers = new Array(questions.length).fill(null);
+        locked = new Array(questions.length).fill(false);
+        currentIndex = 0;
+        selectedTemp = null;
+        score = 0;
+
+        qTotalEl.textContent = String(questions.length);
+        scoreValue.textContent = "0";
+        updateProgressBar();
+
         startScreen.classList.add("hidden");
-        feedbackScreen.classList.add("hidden");
         endScreen.classList.add("hidden");
         quizScreen.classList.remove("hidden");
-        initStateForLevel(getQuestionsByLevel().length);
-        loadQuestion(true);
+
+        renderQuestion(true);
     }
 
-    function loadQuestion(withFade = false) {
-        const qs = getQuestionsByLevel();
-        const q = qs[currentQuestion];
-        questionText.textContent = q.question;
+    // Render current question
+    function renderQuestion(withFade = false) {
+        const q = questions[currentIndex];
+        qIndexEl.textContent = String(currentIndex + 1);
+        questionText.textContent = q.q;
         optionsContainer.innerHTML = "";
-        const previouslySelected = answers[currentQuestion];
 
-        q.options.forEach((opt, i) => {
+        // Build options
+        q.a.forEach((opt, i) => {
             const btn = document.createElement("button");
             btn.textContent = opt;
             btn.className = "optionBtn";
-            if (previouslySelected !== null && i === previouslySelected) btn.classList.add("selected");
-            if (answeredFlags[currentQuestion]) {
+            if (answers[currentIndex] !== null && answers[currentIndex] === i) {
+                btn.classList.add("selected");
+            }
+            if (locked[currentIndex]) {
                 btn.classList.add("disabled");
                 btn.disabled = true;
             } else {
-                btn.addEventListener("click", () => selectOption(i));
+                btn.addEventListener("click", () => onSelect(i, btn));
             }
             optionsContainer.appendChild(btn);
+            if (withFade) applyFade(btn);
         });
 
-        submitBtn.disabled = answeredFlags[currentQuestion];
-        updateNavButtons();
-        updateProgress();
+        // Buttons state
+        prevBtn.disabled = currentIndex === 0;
+        nextBtn.classList.remove("hidden");
+        submitAllBtn.classList.add("hidden");
 
-        if (withFade) {
-            applyFade(questionText);
-            Array.from(optionsContainer.children).forEach(el => applyFade(el));
+        // Caleb flow: Next disabled until user selects something (if not locked)
+        if (locked[currentIndex]) {
+            nextBtn.disabled = false; // reviewing answered question
+        } else {
+            nextBtn.disabled = (selectedTemp === null);
+        }
+
+        // Last question → show Submit All instead of Next
+        if (currentIndex === questions.length - 1) {
+            nextBtn.classList.add("hidden");
+            submitAllBtn.classList.remove("hidden");
+            submitAllBtn.disabled = locked[currentIndex] ? false : (selectedTemp === null);
+        }
+
+        // Fade-in for question text
+        if (withFade) applyFade(questionText);
+
+        updateProgressBar();
+    }
+
+    function onSelect(index, btn) {
+        selectedTemp = index;
+        sClick();
+        // Visual selection
+        Array.from(optionsContainer.querySelectorAll(".optionBtn")).forEach(b => b.classList.remove("selected"));
+        btn.classList.add("selected");
+
+        // Enable Next (or Submit All) when a choice is made
+        if (currentIndex === questions.length - 1) {
+            submitAllBtn.disabled = false;
+        } else {
+            nextBtn.disabled = false;
         }
     }
 
-    function applyFade(el) {
-        el.classList.remove("fade-in");
-        void el.offsetWidth; // reflow to restart animation
-        el.classList.add("fade-in");
-    }
-
-    function selectOption(index) {
-        selectedOption = index;
-        const buttons = document.querySelectorAll(".optionBtn");
-        buttons.forEach((btn, i) => {
-            btn.classList.remove("selected");
-            if (i === index) btn.classList.add("selected");
-        });
-    }
-
-    function checkAnswer() {
-        if (answeredFlags[currentQuestion]) return;
-        if (selectedOption === null) {
-            alert("Please select an answer!");
+    // Lock current answer and move next
+    function goNext() {
+        if (locked[currentIndex]) {
+            // already answered, just move
+            if (currentIndex < questions.length - 1) {
+                currentIndex++;
+                selectedTemp = null;
+                renderQuestion(true);
+            }
             return;
         }
-        const qs = getQuestionsByLevel();
-        const q = qs[currentQuestion];
 
-        answers[currentQuestion] = selectedOption;
-        answeredFlags[currentQuestion] = true;
-        if (selectedOption === q.correct) score += 10;
+        if (selectedTemp === null) return; // should not happen due to disabled button
 
-        quizScreen.classList.add("hidden");
-        feedbackScreen.classList.remove("hidden");
-        feedbackText.textContent = selectedOption === q.correct ? "🎉 Correct!" : "❌ Try again!";
-        explanationText.textContent = q.explanation;
+        // lock and store
+        answers[currentIndex] = selectedTemp;
+        locked[currentIndex] = true;
+        selectedTemp = null;
 
-        if (currentQuestion > furthestIndex) furthestIndex = currentQuestion;
-        updateScore();
-    }
-
-    function nextFromFeedback() {
-        feedbackScreen.classList.add("hidden");
-        const qs = getQuestionsByLevel();
-        if (currentQuestion + 1 < qs.length) {
-            currentQuestion += 1;
-            quizScreen.classList.remove("hidden");
-            loadQuestion(true);
+        // live score update
+        if (answers[currentIndex] === questions[currentIndex].c) {
+            score += 10;
+            scoreValue.textContent = String(score);
+            sSuccess();
         } else {
-            endGame();
+            sFail();
+        }
+
+        // progress
+        if (currentIndex < questions.length - 1) {
+            currentIndex++;
+            renderQuestion(true);
+        } else {
+            // last question path won’t hit here because we hide Next and show Submit All
+            renderQuestion(true);
         }
     }
 
-    function prevQuestion() {
-        if (currentQuestion > 0) {
-            currentQuestion -= 1;
-            feedbackScreen.classList.add("hidden");
-            quizScreen.classList.remove("hidden");
-            loadQuestion(true);
+    // Navigate back without changing answers
+    function goPrev() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            selectedTemp = null;
+            renderQuestion(true);
         }
     }
 
-    function nextQuestion() {
-        const qs = getQuestionsByLevel();
-        if (currentQuestion + 1 < qs.length && (answeredFlags[currentQuestion] || currentQuestion < furthestIndex)) {
-            currentQuestion += 1;
-            feedbackScreen.classList.add("hidden");
-            quizScreen.classList.remove("hidden");
-            loadQuestion(true);
-        } else if (currentQuestion + 1 === qs.length && answeredFlags[currentQuestion]) {
-            // If this is the last question and it's already answered, go to end
-            endGame();
+    // Submit all answers at the end
+    function submitAll() {
+        // Lock last one if not locked (user must have selected something to enable button)
+        if (!locked[currentIndex] && selectedTemp !== null) {
+            answers[currentIndex] = selectedTemp;
+            locked[currentIndex] = true;
+            selectedTemp = null;
         }
-    }
 
-    function updateNavButtons() {
-        const qs = getQuestionsByLevel();
-        prevBtn.disabled = currentQuestion === 0;
-        // Next enabled if we're reviewing (answered) or moving up to furthest seen
-        const canGoNext = (currentQuestion < furthestIndex) || answeredFlags[currentQuestion];
-        nextBtn.disabled = !(canGoNext && currentQuestion + 1 <= qs.length);
-    }
+        // Compute score
+        score = 0;
+        answers.forEach((ans, i) => {
+            const correct = getBank()[i].c;
+            if (ans === correct) score += 10;
+        });
+        scoreValue.textContent = String(score);
 
-    function updateScore() {
-        scoreValue.textContent = score;
-    }
-
-    function updateProgress() {
-        const total = getQuestionsByLevel().length;
-        const answeredCount = answeredFlags.filter(Boolean).length;
-        const pct = total ? Math.round((answeredCount / total) * 100) : 0;
-        progressFill.style.width = pct + "%";
-        progressLabel.textContent = answeredCount + " / " + total;
-    }
-
-    function restartLevel() {
-        initStateForLevel(getQuestionsByLevel().length);
-        loadQuestion(true);
-        quizScreen.classList.remove("hidden");
-        feedbackScreen.classList.add("hidden");
-        endScreen.classList.add("hidden");
-    }
-
-    function endGame() {
+        // End screen + unlock logic
         quizScreen.classList.add("hidden");
         endScreen.classList.remove("hidden");
-        finalScore.textContent = score;
+        finalScore.textContent = String(score);
 
-        const progress = getStoredProgress();
-        let unlockedText = "";
-        let nextLevel = null;
+        const p = getStoredProgress();
+        const levelKey = currentLevel === "Basic" ? "basicBest"
+            : currentLevel === "Intermediary" ? "intermediaryBest"
+                : "advanceBest";
 
-        if (currentLevel === "Basic") {
-            if (score > progress.basicBest) progress.basicBest = score;
-            if (score >= UNLOCK_THRESHOLD) { unlockedText = "Intermediary is now unlocked! 🎯"; nextLevel = "Intermediary"; }
-        } else if (currentLevel === "Intermediary") {
-            if (score > progress.intermediaryBest) progress.intermediaryBest = score;
-            if (score >= UNLOCK_THRESHOLD) { unlockedText = "Advance is now unlocked! 🚀"; nextLevel = "Advance"; }
+        if (score > p[levelKey]) p[levelKey] = score;
+        setStoredProgress(p);
+
+        // Determine unlock
+        const needed = Math.round(getBank().length * 10 * PERCENT_TO_UNLOCK);
+        let nextLevelName = null;
+        if (score >= needed) {
+            sSuccess();
+            if (currentLevel === "Basic") nextLevelName = "Intermediary";
+            if (currentLevel === "Intermediary") nextLevelName = "Advance";
+            unlockMessage.textContent = nextLevelName
+                ? `${nextLevelName} is now unlocked!`
+                : "";
         } else {
-            if (score > progress.advanceBest) progress.advanceBest = score;
-            unlockedText = "";
-            nextLevel = null;
+            sFail();
+            unlockMessage.textContent = `Score at least ${needed} to unlock the next level.`;
         }
 
-        setStoredProgress(progress);
-        unlockMessage.textContent = unlockedText;
-
-        // Next level button visibility
-        if (nextLevel) {
+        // Next level button
+        if (nextLevelName) {
             nextLevelBtn.classList.remove("hidden");
-            nextLevelBtn.dataset.level = nextLevel;
-            nextLevelBtn.textContent = `Go to ${nextLevel} Level`;
+            nextLevelBtn.dataset.level = nextLevelName;
+            nextLevelBtn.textContent = `Go to ${nextLevelName} Level`;
         } else {
             nextLevelBtn.classList.add("hidden");
             nextLevelBtn.removeAttribute("data-level");
         }
 
+        // Leaderboard simple (top 5)
         updateLeaderboard();
-        refreshLocksOnEnd();
-    }
-
-    function refreshLocksOnEnd() {
-        intermediaryBtn.classList.add("locked");
-        intermediaryBtn.setAttribute("disabled", "true");
-        advanceBtn.classList.add("locked");
-        advanceBtn.setAttribute("disabled", "true");
+        // Reset locks visuals when coming back to level screen
         applyLocks();
     }
 
-    function restartGame() {
+    function restartLevel() {
+        // keep same level, reset answers
+        questions = getBank();
+        answers = new Array(questions.length).fill(null);
+        locked = new Array(questions.length).fill(false);
+        currentIndex = 0;
+        selectedTemp = null;
+        score = 0;
+        scoreValue.textContent = "0";
+        qTotalEl.textContent = String(questions.length);
+
         endScreen.classList.add("hidden");
-        quizScreen.classList.add("hidden");
-        feedbackScreen.classList.add("hidden");
-        startScreen.classList.remove("hidden");
-        applyLocks();
-    }
-
-    function backToLevels() {
-        restartGame();
+        startScreen.classList.add("hidden");
+        quizScreen.classList.remove("hidden");
+        renderQuestion(true);
     }
 
     function updateLeaderboard() {
@@ -426,26 +370,58 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.setItem(key, JSON.stringify(leaderboard));
 
         leaderboardDiv.innerHTML = `<h3>Top Civic Leaders — ${currentLevel}</h3>`;
-        leaderboardDiv.innerHTML += leaderboard.map((s, i) => `<p>${i + 1}. ${s} points</p>`).join("");
+        leaderboard.forEach((s, i) => {
+            leaderboardDiv.innerHTML += `<p>${i + 1}. ${s} points</p>`;
+        });
     }
 
-    // Event bindings
-    basicBtn.addEventListener("click", () => startLevel("Basic"));
-    intermediaryBtn.addEventListener("click", () => { if (!intermediaryBtn.disabled) startLevel("Intermediary"); });
-    advanceBtn.addEventListener("click", () => { if (!advanceBtn.disabled) startLevel("Advance"); });
+    function getBank() {
+        return currentLevel === "Basic" ? BASIC_QUESTIONS
+            : currentLevel === "Intermediary" ? INTERMEDIARY_QUESTIONS
+                : ADVANCE_QUESTIONS;
+    }
 
-    prevBtn.addEventListener("click", prevQuestion);
-    nextBtn.addEventListener("click", nextQuestion);
-    submitBtn.addEventListener("click", checkAnswer);
-    restartLevelBtn.addEventListener("click", restartLevel);
+    function updateProgressBar() {
+        const total = getBank().length;
+        const answered = locked.filter(Boolean).length;
+        const pct = total ? Math.round((answered / total) * 100) : 0;
+        progressFill.style.width = pct + "%";
+    }
 
-    nextAfterFeedbackBtn.addEventListener("click", nextFromFeedback);
-    restartBtn.addEventListener("click", restartGame);
-    backToLevelsBtn.addEventListener("click", backToLevels);
-    nextLevelBtn.addEventListener("click", (e) => {
-        const lvl = e.currentTarget.dataset.level;
-        if (lvl) startLevel(lvl);
+    function applyFade(el) {
+        el.classList.remove("fade-in");
+        // reflow
+        void el.offsetWidth;
+        el.classList.add("fade-in");
+    }
+
+    // Events
+    basicBtn.addEventListener("click", () => { sClick(); startLevel("Basic"); });
+    intermediaryBtn.addEventListener("click", () => {
+        if (!intermediaryBtn.disabled) { sClick(); startLevel("Intermediary"); }
+    });
+    advanceBtn.addEventListener("click", () => {
+        if (!advanceBtn.disabled) { sClick(); startLevel("Advance"); }
     });
 
+    prevBtn.addEventListener("click", () => { sClick(); goPrev(); });
+    nextBtn.addEventListener("click", () => { sClick(); goNext(); });
+    submitAllBtn.addEventListener("click", () => { sClick(); submitAll(); });
+    restartLevelBtn.addEventListener("click", () => { sClick(); restartLevel(); });
+
+    restartBtn.addEventListener("click", () => { sClick(); restartLevel(); });
+    backToLevelsBtn.addEventListener("click", () => {
+        sClick();
+        endScreen.classList.add("hidden");
+        quizScreen.classList.add("hidden");
+        startScreen.classList.remove("hidden");
+        applyLocks();
+    });
+    nextLevelBtn.addEventListener("click", (e) => {
+        const lvl = e.currentTarget.dataset.level;
+        if (lvl) { sClick(); startLevel(lvl); }
+    });
+
+    // Init
     applyLocks();
 });
