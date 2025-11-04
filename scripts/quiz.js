@@ -1,3 +1,8 @@
+// CivicPlay Quiz Engine - Complete
+// Flow: Next-first, Submit at end, locks on Next, live score (E1), sounds SFX, background music via WebAudio (afro-chill), MLoop1
+// Levels: Basic / Intermediary / Advance - 15 questions each
+// UI assumptions: index.html + styles.css provided earlier in this project
+
 document.addEventListener("DOMContentLoaded", () => {
     // Screens
     const startScreen = document.getElementById("startScreen");
@@ -32,6 +37,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const backToLevelsBtn = document.getElementById("backToLevelsBtn");
     const nextLevelBtn = document.getElementById("nextLevelBtn");
 
+    // Music toggle button (icon 🔊/🔇)
+    const musicToggle = document.getElementById("musicToggle");
+
     // State
     let currentLevel = "Basic";
     let questions = [];
@@ -41,9 +49,17 @@ document.addEventListener("DOMContentLoaded", () => {
     let locked = [];         // boolean per question: true after NEXT
     let score = 0;
 
-    // Sounds (playful)
+    // background music controller
+    let bgMusic = new Audio("assets/music.mp3");
+    bgMusic.loop = true;
+    bgMusic.volume = 0.25; // volumen suave
+    let musicEnabled = true;
+
+    // WebAudio setup (shared for SFX + Music)
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     const ctx = new AudioCtx();
+
+    // ---- SFX (playful) ----
     const playTone = (freq = 440, dur = 0.12, type = "sine", vol = 0.06) => {
         const o = ctx.createOscillator();
         const g = ctx.createGain();
@@ -58,10 +74,81 @@ document.addEventListener("DOMContentLoaded", () => {
     const sSuccess = () => { playTone(700, 0.12, "sine", 0.07); setTimeout(() => playTone(900, 0.12, "sine", 0.07), 120); };
     const sFail = () => { playTone(250, 0.14, "sawtooth", 0.06); };
 
+    // ---- Background Music (afro-chill groove via WebAudio) ----
+    let musicPlaying = false;    // currently playing
+    let musicTimer = null;       // loop timer
+    let musicBeat = 0;           // beat counter
+
+    // Mini groove generator (no external files).
+    function musicStart() {
+        if (!musicEnabled) return;
+        bgMusic.currentTime = 0;
+        bgMusic.play().catch(() => { });
+    }
+
+    function musicStop() {
+        bgMusic.pause();
+    }
+
+    function percussive(freq = 120, attack = 0.005, decay = 0.11, vol = 0.12) {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = "sine";
+        o.frequency.setValueAtTime(freq, ctx.currentTime);
+        g.gain.setValueAtTime(0, ctx.currentTime);
+        g.gain.linearRampToValueAtTime(vol, ctx.currentTime + attack);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + attack + decay);
+        o.connect(g); g.connect(ctx.destination);
+        o.start();
+        o.stop(ctx.currentTime + attack + decay + 0.02);
+    }
+    function hat(dur = 0.03) {
+        const n = ctx.createBufferSource();
+        const bufferSize = 4096;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) { data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize); }
+        n.buffer = buffer;
+        const bp = ctx.createBiquadFilter();
+        bp.type = "highpass";
+        bp.frequency.value = 8000;
+        const g = ctx.createGain();
+        g.gain.value = 0.05;
+        n.connect(bp); bp.connect(g); g.connect(ctx.destination);
+        n.start();
+        n.stop(ctx.currentTime + dur);
+    }
+    function pluck(freq = 220, dur = 0.12) {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = "triangle";
+        o.frequency.setValueAtTime(freq, ctx.currentTime);
+        g.gain.setValueAtTime(0.0001, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+        o.connect(g); g.connect(ctx.destination);
+        o.start();
+        o.stop(ctx.currentTime + dur + 0.02);
+    }
+
+    // Toggle button 🔊/🔇
+    if (musicToggle) {
+        musicToggle.addEventListener("click", () => {
+            musicEnabled = !musicEnabled;
+            if (!musicEnabled) {
+                bgMusic.pause();
+                musicToggle.textContent = "🔇";
+            } else {
+                bgMusic.play().catch(() => { });
+                musicToggle.textContent = "🔊";
+            }
+        });
+    }
+
     // Unlock threshold: 60% correct
     const PERCENT_TO_UNLOCK = 0.6;
 
-    // Question banks (15 each)
+    // ---- Question banks (15 each) ----
     const BASIC_QUESTIONS = [
         { q: "What does INEC stand for in Nigeria?", a: ["International Electoral Council", "Independent National Electoral Commission", "National Voters Committee", "Institute of Elections Nigeria"], c: 1 },
         { q: "What is the minimum voting age in Nigeria?", a: ["16", "17", "18", "19"], c: 2 },
@@ -116,7 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
         { q: "A peaceful transfer of power strengthens", a: ["Democratic stability", "Dictatorship", "Lawlessness", "Anarchy"], c: 0 }
     ];
 
-    // Progress storage per level
+    // ---- Progress storage per level ----
     function getStoredProgress() {
         try {
             const data = JSON.parse(localStorage.getItem("civicplay_progress")) || {};
@@ -146,7 +233,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Start a level
+    // ---- Level start ----
     function startLevel(level) {
         currentLevel = level;
         levelNameEl.textContent = currentLevel;
@@ -169,9 +256,12 @@ document.addEventListener("DOMContentLoaded", () => {
         quizScreen.classList.remove("hidden");
 
         renderQuestion(true);
+
+        // Autoplay music per level (authorized by user click)
+        if (musicEnabled) musicStart();
     }
 
-    // Render current question
+    // ---- Render current question ----
     function renderQuestion(withFade = false) {
         const q = questions[currentIndex];
         qIndexEl.textContent = String(currentIndex + 1);
@@ -201,34 +291,29 @@ document.addEventListener("DOMContentLoaded", () => {
         nextBtn.classList.remove("hidden");
         submitAllBtn.classList.add("hidden");
 
-        // Caleb flow: Next disabled until user selects something (if not locked)
+        // Next disabled until user selects (if not locked)
         if (locked[currentIndex]) {
-            nextBtn.disabled = false; // reviewing answered question
+            nextBtn.disabled = false;
         } else {
             nextBtn.disabled = (selectedTemp === null);
         }
 
-        // Last question → show Submit All instead of Next
+        // Last question → show Submit All
         if (currentIndex === questions.length - 1) {
             nextBtn.classList.add("hidden");
             submitAllBtn.classList.remove("hidden");
             submitAllBtn.disabled = locked[currentIndex] ? false : (selectedTemp === null);
         }
 
-        // Fade-in for question text
         if (withFade) applyFade(questionText);
-
         updateProgressBar();
     }
 
     function onSelect(index, btn) {
         selectedTemp = index;
         sClick();
-        // Visual selection
         Array.from(optionsContainer.querySelectorAll(".optionBtn")).forEach(b => b.classList.remove("selected"));
         btn.classList.add("selected");
-
-        // Enable Next (or Submit All) when a choice is made
         if (currentIndex === questions.length - 1) {
             submitAllBtn.disabled = false;
         } else {
@@ -236,10 +321,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Lock current answer and move next
+    // ---- Navigation ----
     function goNext() {
         if (locked[currentIndex]) {
-            // already answered, just move
             if (currentIndex < questions.length - 1) {
                 currentIndex++;
                 selectedTemp = null;
@@ -247,15 +331,12 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             return;
         }
-
-        if (selectedTemp === null) return; // should not happen due to disabled button
+        if (selectedTemp === null) return; // guarded by disabled button
 
         // lock and store
         answers[currentIndex] = selectedTemp;
         locked[currentIndex] = true;
-        selectedTemp = null;
-
-        // live score update
+        // Live score update (E1)
         if (answers[currentIndex] === questions[currentIndex].c) {
             score += 10;
             scoreValue.textContent = String(score);
@@ -263,18 +344,16 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             sFail();
         }
+        selectedTemp = null;
 
-        // progress
         if (currentIndex < questions.length - 1) {
             currentIndex++;
             renderQuestion(true);
         } else {
-            // last question path won’t hit here because we hide Next and show Submit All
-            renderQuestion(true);
+            renderQuestion(true); // last q keeps Submit All visible
         }
     }
 
-    // Navigate back without changing answers
     function goPrev() {
         if (currentIndex > 0) {
             currentIndex--;
@@ -283,52 +362,45 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Submit all answers at the end
+    // ---- Submit All ----
     function submitAll() {
-        // Lock last one if not locked (user must have selected something to enable button)
         if (!locked[currentIndex] && selectedTemp !== null) {
             answers[currentIndex] = selectedTemp;
             locked[currentIndex] = true;
+            if (answers[currentIndex] === questions[currentIndex].c) {
+                score += 10;
+                scoreValue.textContent = String(score);
+            }
             selectedTemp = null;
         }
 
-        // Compute score
-        score = 0;
-        answers.forEach((ans, i) => {
-            const correct = getBank()[i].c;
-            if (ans === correct) score += 10;
-        });
-        scoreValue.textContent = String(score);
-
-        // End screen + unlock logic
         quizScreen.classList.add("hidden");
         endScreen.classList.remove("hidden");
         finalScore.textContent = String(score);
+
+        // Stop music at end of level (MLoop1)
+        musicStop();
 
         const p = getStoredProgress();
         const levelKey = currentLevel === "Basic" ? "basicBest"
             : currentLevel === "Intermediary" ? "intermediaryBest"
                 : "advanceBest";
-
         if (score > p[levelKey]) p[levelKey] = score;
         setStoredProgress(p);
 
-        // Determine unlock
+        // Unlock logic
         const needed = Math.round(getBank().length * 10 * PERCENT_TO_UNLOCK);
         let nextLevelName = null;
         if (score >= needed) {
             sSuccess();
             if (currentLevel === "Basic") nextLevelName = "Intermediary";
             if (currentLevel === "Intermediary") nextLevelName = "Advance";
-            unlockMessage.textContent = nextLevelName
-                ? `${nextLevelName} is now unlocked!`
-                : "";
+            unlockMessage.textContent = nextLevelName ? `${nextLevelName} is now unlocked!` : "";
         } else {
             sFail();
-            unlockMessage.textContent = `Score at least ${needed} to unlock the next level.`;
+            unlockMessage.textContent = `😅💪 Try again, score at least ${needed} to unlock the next level!`;
         }
 
-        // Next level button
         if (nextLevelName) {
             nextLevelBtn.classList.remove("hidden");
             nextLevelBtn.dataset.level = nextLevelName;
@@ -338,14 +410,11 @@ document.addEventListener("DOMContentLoaded", () => {
             nextLevelBtn.removeAttribute("data-level");
         }
 
-        // Leaderboard simple (top 5)
         updateLeaderboard();
-        // Reset locks visuals when coming back to level screen
         applyLocks();
     }
 
     function restartLevel() {
-        // keep same level, reset answers
         questions = getBank();
         answers = new Array(questions.length).fill(null);
         locked = new Array(questions.length).fill(false);
@@ -359,6 +428,12 @@ document.addEventListener("DOMContentLoaded", () => {
         startScreen.classList.add("hidden");
         quizScreen.classList.remove("hidden");
         renderQuestion(true);
+
+        // restart music for level
+        if (musicEnabled) {
+            musicStop();
+            musicStart();
+        }
     }
 
     function updateLeaderboard() {
@@ -390,12 +465,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function applyFade(el) {
         el.classList.remove("fade-in");
-        // reflow
-        void el.offsetWidth;
+        void el.offsetWidth; // reflow to restart
         el.classList.add("fade-in");
     }
 
-    // Events
+    // ---- Events ----
     basicBtn.addEventListener("click", () => { sClick(); startLevel("Basic"); });
     intermediaryBtn.addEventListener("click", () => {
         if (!intermediaryBtn.disabled) { sClick(); startLevel("Intermediary"); }
@@ -412,6 +486,8 @@ document.addEventListener("DOMContentLoaded", () => {
     restartBtn.addEventListener("click", () => { sClick(); restartLevel(); });
     backToLevelsBtn.addEventListener("click", () => {
         sClick();
+        // stop music when leaving level
+        musicStop();
         endScreen.classList.add("hidden");
         quizScreen.classList.add("hidden");
         startScreen.classList.remove("hidden");
@@ -419,9 +495,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     nextLevelBtn.addEventListener("click", (e) => {
         const lvl = e.currentTarget.dataset.level;
-        if (lvl) { sClick(); startLevel(lvl); }
+        if (lvl) {
+            sClick();
+            // change level → restart music cleanly
+            musicStop();
+            startLevel(lvl);
+        }
     });
 
-    // Init
+    // ---- Init ----
     applyLocks();
 });
