@@ -48,6 +48,70 @@ document.addEventListener("DOMContentLoaded", () => {
     let answers = [];        // locked answers by index (or null)
     let locked = [];         // boolean per question: true after NEXT
     let score = 0;
+    let timerInterval = null;
+    let timeLeft = 10;
+    let timeExpired = []; // track per question
+
+    function updateTimerFace(text) {
+        const el = document.getElementById("timerCircle");
+        if (!el) return;
+        el.textContent = text;
+    }
+
+    function startTimer() {
+        // si ya está bloqueada o expirada no iniciar
+        if (locked[currentIndex] || timeExpired[currentIndex]) {
+            updateTimerFace("⏳");
+            disableOptions();
+            return;
+        }
+
+        timeLeft = 10;
+        updateTimerFace(timeLeft);
+
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerFace(timeLeft);
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                timeExpired[currentIndex] = true;
+                locked[currentIndex] = true;
+                updateTimerFace("⏳");
+                disableOptions();
+
+                // permitir avanzar aun sin seleccionar
+                if (currentIndex === questions.length - 1) {
+                    submitAllBtn.disabled = false;
+                } else {
+                    nextBtn.disabled = false;
+                }
+
+                // mensaje
+                const old = quizScreen.querySelector(".timeup-msg");
+                if (old) old.remove();
+                document.getElementById("explanationBox").textContent = "Time is up! ⏳";
+                document.getElementById("explanationBox").style.color = "#cc0000";
+                document.getElementById("explanationBox").style.fontWeight = "bold";
+
+            }
+        }, 1000);
+    }
+
+    function stopTimer() {
+        clearInterval(timerInterval);
+    }
+
+    function disableOptions() {
+        const btns = optionsContainer.querySelectorAll(".optionBtn");
+        btns.forEach(b => {
+            b.classList.add("disabled");
+            b.disabled = true;
+            b.style.pointerEvents = "none";
+            b.style.opacity = "0.6";
+        });
+    }
 
     // background music controller
     let bgMusic = new Audio("assets/music.mp3");
@@ -146,26 +210,192 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Unlock threshold: 60% correct
-    const PERCENT_TO_UNLOCK = 0.6;
+    const PERCENT_TO_UNLOCK = 0.9;
 
     // ---- Question banks (15 each) ----
     const BASIC_QUESTIONS = [
-        { q: "What does INEC stand for in Nigeria?", a: ["International Electoral Council", "Independent National Electoral Commission", "National Voters Committee", "Institute of Elections Nigeria"], c: 1 },
-        { q: "What is the minimum voting age in Nigeria?", a: ["16", "17", "18", "19"], c: 2 },
-        { q: "Which document is the supreme law of Nigeria?", a: ["Penal Code", "The Constitution", "Electoral Act", "Public Order Act"], c: 1 },
-        { q: "Which body registers political parties in Nigeria?", a: ["National Assembly", "INEC", "Supreme Court", "Ministry of Justice"], c: 1 },
-        { q: "Local government primarily handles which service?", a: ["Foreign policy", "Primary health and sanitation", "National defense", "Monetary policy"], c: 1 },
-        { q: "Which law guides election procedures in Nigeria?", a: ["Penal Code", "Electoral Act", "Companies Act", "Evidence Act"], c: 1 },
-        { q: "A key civic duty for citizens is to", a: ["Avoid tax", "Ignore jury service", "Vote and obey the law", "Undermine public order"], c: 2 },
-        { q: "At elections, who organizes and supervises the process?", a: ["INEC", "National Assembly", "Judiciary", "Police Service Commission"], c: 0 },
-        { q: "Which branch interprets the laws?", a: ["Executive", "Legislature", "Judiciary", "Civil Service"], c: 2 },
-        { q: "What does media and information literacy help citizens do?", a: ["Accept information without verifying", "Identify credible sources", "Ignore civic duties", "Rely on rumors"], c: 1 },
-        { q: "Citizens should participate in community service because it", a: ["Replaces elections", "Builds social responsibility", "Eliminates taxes", "Removes laws"], c: 1 },
-        { q: "Nigeria practices which system of government?", a: ["Unitary", "Confederal", "Federal", "Absolute monarchy"], c: 2 },
-        { q: "What is the permanent voter’s card commonly called?", a: ["PVC", "NIN", "TIN", "BVN"], c: 0 },
-        { q: "The Electoral Act mainly contains", a: ["Tax rules", "Election procedures", "Military codes", "Trade policies"], c: 1 },
-        { q: "Youth engagement in democracy is important because it", a: ["Reduces turnout", "Weakens institutions", "Builds accountable leadership", "Eliminates debates"], c: 2 }
+        {
+            q: "What does a democratic system of government primarily ensure?",
+            a: ["Single-party rule", "People’s participation in decision-making", "Military control of governance", "Judicial supremacy above citizens"],
+            c: 1,
+            e: "Democracy is based on popular participation. Citizens have the right to choose who leads them and how the society is managed."
+        },
+        {
+            q: "Which document is considered the highest source of law in Nigeria?",
+            a: ["Electoral Act", "Criminal Procedure Code", "The Constitution", "Public Service Rules"],
+            c: 2,
+            e: "The Constitution is the supreme law of Nigeria. All other laws and actions must align with its provisions."
+        },
+        {
+            q: "Which body is responsible for conducting elections in Nigeria?",
+            a: ["INEC", "National Assembly", "Supreme Court", "Federal Ministry of Justice"],
+            c: 0,
+            e: "INEC (Independent National Electoral Commission) is legally mandated to organize, supervise, and conduct credible elections in Nigeria."
+        },
+        {
+            q: "What is the legal voting age for elections in Nigeria?",
+            a: ["16 years", "17 years", "18 years", "19 years"],
+            c: 2,
+            e: "The Constitution grants the right to vote at 18. This ensures a minimum level of maturity and civic awareness."
+        },
+        {
+            q: "Which level of government is closest to the people and handles community needs?",
+            a: ["Federal Government", "State Government", "Local Government", "Judiciary"],
+            c: 2,
+            e: "Local governments are closest to the grassroots and are responsible for primary sanitation, community development, and basic services."
+        },
+        {
+            q: "What is a key civic duty of every responsible citizen in a democracy?",
+            a: ["Evading tax payments", "Avoiding participation in elections", "Voting and obeying the law", "Disobeying government institutions"],
+            c: 2,
+            e: "Citizens are expected to engage in elections and respect the law to ensure societal order and accountability."
+        },
+        {
+            q: "What term describes citizens actively taking part in political processes?",
+            a: ["Civic engagement", "Electoral malpractice", "Political suppression", "Legislative autonomy"],
+            c: 0,
+            e: "Civic engagement means participating in public decision-making, elections, and community service activities."
+        },
+        {
+            q: "Which branch makes laws for the country?",
+            a: ["Executive", "Legislature", "Judiciary", "Civil Defence"],
+            c: 1,
+            e: "The legislature drafts, debates, and passes laws that govern the nation and protect citizens' rights."
+        },
+        {
+            q: "Who interprets the laws and ensures justice is served?",
+            a: ["Legislature", "Executive", "Judiciary", "Political Parties"],
+            c: 2,
+            e: "The judiciary interprets and applies the law and ensures justice is maintained based on constitutional guidance."
+        },
+        {
+            q: "What is the permanent voter’s card commonly known as in Nigeria?",
+            a: ["PVC", "BCN", "NIN", "TIN"],
+            c: 0,
+            e: "The PVC is used to identify and accredit voters during elections. It is issued by INEC."
+        },
+        {
+            q: "Which law provides details on how elections should be conducted?",
+            a: ["Companies Law", "Electoral Act", "Land Use Act", "Finance Act"],
+            c: 1,
+            e: "The Electoral Act contains rules and procedures guiding elections, campaigns, results, and political party operations."
+        },
+        {
+            q: "Why is youth participation vital in democracy?",
+            a: ["Youth weaken government institutions", "Youth reduce accountability", "Youth ensure innovation and future leadership", "Youth do not understand politics"],
+            c: 2,
+            e: "Young people bring new ideas and shape future leadership. Their participation strengthens democracy and accountability."
+        },
+        {
+            q: "Which of the following is an example of civic responsibility?",
+            a: ["Spreading rumors about candidates", "Participating in elections", "Rejecting voter education programs", "Avoiding public service"],
+            c: 1,
+            e: "Voting and participating in the electoral process ensures that citizens contribute to decisions affecting national development."
+        },
+        {
+            q: "Which Nigerian government tier manages primary health care and local roads?",
+            a: ["Federal Government", "State Government", "Local Government", "National Assembly"],
+            c: 2,
+            e: "Local governments coordinate primary health centers and manage community roads to support basic local infrastructure."
+        },
+        {
+            q: "Why should citizens obey the law in a democratic society?",
+            a: ["It prevents elections from taking place", "It ensures public order and civic stability", "It strengthens dictatorship", "It reduces citizen rights"],
+            c: 1,
+            e: "Obeying the law promotes peace and stability and protects the rights of all citizens."
+        },
+        {
+            q: "What is an election?",
+            a: ["A random selection of leaders", "A process of choosing leaders through voting", "A military appointment procedure", "A judicial decision-making process"],
+            c: 1,
+            e: "An election is the formal method through which people select leaders by casting votes."
+        },
+        {
+            q: "Which agency issues voter registration cards in Nigeria?",
+            a: ["National Population Commission", "INEC", "Central Bank of Nigeria", "Federal Road Safety Corps"],
+            c: 1,
+            e: "INEC registers eligible voters and issues PVCs to enable lawful participation in elections."
+        },
+        {
+            q: "Why is public debate important in democracy?",
+            a: ["It blocks public ideas", "It develops informed opinions", "It eliminates political parties", "It weakens public trust"],
+            c: 1,
+            e: "Debate allows citizens to evaluate different ideas, compare policies, and make informed decisions as voters."
+        },
+        {
+            q: "Which principle ensures that no arm of government becomes too powerful?",
+            a: ["Freedom of speech", "Separation of powers", "National unity", "Military oversight"],
+            c: 1,
+            e: "Separation of powers allocates authority to the executive, legislature, and judiciary to prevent concentration of power."
+        },
+        {
+            q: "Citizens must pay tax because it",
+            a: ["Funds government services and infrastructure", "Punishes productive people", "Reduces democracy", "Eliminates elections"],
+            c: 0,
+            e: "Tax revenue funds public institutions, education, health services, roads, and other common resources."
+        },
+        {
+            q: "How often are general elections normally conducted in Nigeria?",
+            a: ["Every year", "Every 2 years", "Every 4 years", "Every 8 years"],
+            c: 2,
+            e: "Nigeria conducts general elections every 4 years to elect leaders at the federal and state levels."
+        },
+        {
+            q: "Which of the following best describes civic education?",
+            a: ["Training soldiers for defense", "Teaching citizens their rights, duties and participation roles", "Organizing entertainment events", "Managing foreign currency exchange"],
+            c: 1,
+            e: "Civic education helps citizens understand their rights, duties, national values, and responsibility in society."
+        },
+        {
+            q: "What makes an election credible?",
+            a: ["Violence and intimidation", "Transparency and fairness", "Vote buying", "Restricting opposition parties"],
+            c: 1,
+            e: "A credible election is free, fair, and transparent, giving voters equal opportunity to choose leaders."
+        },
+        {
+            q: "The act of citizens contributing ideas to public policy development is called",
+            a: ["Civic engagement", "Political suppression", "Illegal assembly", "Judicial misconduct"],
+            c: 0,
+            e: "Civic engagement involves participation in discussions and decisions that shape community development."
+        },
+        {
+            q: "A government that is run by elected representatives of the citizens is called",
+            a: ["Autocracy", "Democracy", "Feudalism", "Dictatorship"],
+            c: 1,
+            e: "Democracy is the system where leaders are chosen through elections and represent the interests of the people."
+        },
+        {
+            q: "Which agency monitors campaign financing of political parties in Nigeria?",
+            a: ["INEC", "CBN", "NCC", "FRSC"],
+            c: 0,
+            e: "INEC monitors campaign financing to ensure fairness and prevent illegal funding in elections."
+        },
+        {
+            q: "Why is freedom of speech important in a democratic nation?",
+            a: ["It allows citizens to express opinions without fear", "It removes democratic elections", "It weakens the judiciary", "It increases corruption"],
+            c: 0,
+            e: "Freedom of speech empowers citizens to express their views openly, which strengthens accountability."
+        },
+        {
+            q: "What does voters’ education aim to achieve?",
+            a: ["Confuse voters about election days", "Guide voters on rights and voting procedures", "Promote voter intimidation", "End elections completely"],
+            c: 1,
+            e: "Voters’ education ensures that citizens understand their voting rights, responsibilities and how elections are conducted."
+        },
+        {
+            q: "What does the rule of law ensure?",
+            a: ["Creating special laws for certain people", "Everyone is subject to the law equally", "Avoiding punishment for officials", "Granting immunity to citizens"],
+            c: 1,
+            e: "The rule of law ensures that all individuals, including leaders, must obey the law equally without discrimination."
+        },
+        {
+            q: "Why do political parties exist?",
+            a: ["To allow multiple organized groups to contest power", "To block youth participation", "To eliminate free elections", "To restrict civic rights"],
+            c: 0,
+            e: "Political parties aggregate ideas, compete in elections, and provide citizens with choices for leadership."
+        }
     ];
+
 
     const INTERMEDIARY_QUESTIONS = [
         { q: "Which section of the Constitution lists INEC among federal bodies?", a: ["Section 6", "Section 153", "Section 1", "Section 217"], c: 1 },
@@ -237,12 +467,21 @@ document.addEventListener("DOMContentLoaded", () => {
     function startLevel(level) {
         currentLevel = level;
         levelNameEl.textContent = currentLevel;
-        questions = (level === "Basic") ? BASIC_QUESTIONS
+        let pool = (level === "Basic") ? BASIC_QUESTIONS
             : (level === "Intermediary") ? INTERMEDIARY_QUESTIONS
                 : ADVANCE_QUESTIONS;
 
+        // shuffle pool
+        pool = pool.sort(() => Math.random() - 0.5);
+
+        // take first 15 always
+        questions = pool.slice(0, 15);
+
+
         answers = new Array(questions.length).fill(null);
         locked = new Array(questions.length).fill(false);
+        timeExpired = new Array(questions.length).fill(false);
+
         currentIndex = 0;
         selectedTemp = null;
         score = 0;
@@ -255,10 +494,16 @@ document.addEventListener("DOMContentLoaded", () => {
         endScreen.classList.add("hidden");
         quizScreen.classList.remove("hidden");
 
+        document.getElementById("timerBox").style.display = "block";
+
         renderQuestion(true);
 
         // Autoplay music per level (authorized by user click)
         if (musicEnabled) musicStart();
+
+        // timer start
+        stopTimer();
+        startTimer();
     }
 
     // ---- Render current question ----
@@ -267,9 +512,18 @@ document.addEventListener("DOMContentLoaded", () => {
         qIndexEl.textContent = String(currentIndex + 1);
         questionText.textContent = q.q;
         optionsContainer.innerHTML = "";
+        document.getElementById("explanationBox").textContent = "";
+        document.getElementById("explanationBox").style.color = "";
+        document.getElementById("explanationBox").style.fontWeight = "";
 
-        // Build options
-        q.a.forEach((opt, i) => {
+
+        // Randomize options while preserving correct index reference
+        let options = q.a.map((opt, idx) => ({ opt, idx })).sort(() => Math.random() - 0.5);
+
+        // Build randomized options
+        options.forEach(item => {
+            const i = item.idx; // original correct index reference
+            const opt = item.opt;
             const btn = document.createElement("button");
             btn.textContent = opt;
             btn.className = "optionBtn";
@@ -286,8 +540,16 @@ document.addEventListener("DOMContentLoaded", () => {
             if (withFade) applyFade(btn);
         });
 
+
+
+
         // Buttons state
-        prevBtn.disabled = currentIndex === 0;
+        // PREV solo permitido si YA expiró o si YA está locked
+        if (currentIndex === 0) {
+            prevBtn.disabled = true;
+        } else {
+            prevBtn.disabled = (!locked[currentIndex] && !timeExpired[currentIndex]);
+        }
         nextBtn.classList.remove("hidden");
         submitAllBtn.classList.add("hidden");
 
@@ -307,13 +569,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (withFade) applyFade(questionText);
         updateProgressBar();
+
+        // ============= TIMER CONTROL SECTION =============
+
+        // detener timer SIEMPRE al renderizar
+        stopTimer();
+
+        // si ya estaba expirada, mostrar ⏳ y bloquear
+        if (timeExpired[currentIndex]) {
+            updateTimerFace("⏳");
+            disableOptions();
+        }
+
     }
 
+
     function onSelect(index, btn) {
+        if (timeExpired[currentIndex] || locked[currentIndex]) return;
+
         selectedTemp = index;
         sClick();
         Array.from(optionsContainer.querySelectorAll(".optionBtn")).forEach(b => b.classList.remove("selected"));
         btn.classList.add("selected");
+
         if (currentIndex === questions.length - 1) {
             submitAllBtn.disabled = false;
         } else {
@@ -323,44 +601,70 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ---- Navigation ----
     function goNext() {
-        if (locked[currentIndex]) {
-            if (currentIndex < questions.length - 1) {
-                currentIndex++;
-                selectedTemp = null;
-                renderQuestion(true);
+
+        // if no answer selected and time not expired, do nothing
+        if (selectedTemp === null && !timeExpired[currentIndex] && !locked[currentIndex]) return;
+
+        // lock answer if not locked yet
+        if (!locked[currentIndex]) {
+            locked[currentIndex] = true;
+            answers[currentIndex] = selectedTemp;
+
+            if (!timeExpired[currentIndex]) {
+                if (answers[currentIndex] === questions[currentIndex].c) {
+                    score += 10;
+                    scoreValue.textContent = String(score);
+                    sSuccess();
+                } else {
+                    sFail();
+                }
             }
-            return;
         }
-        if (selectedTemp === null) return; // guarded by disabled button
 
-        // lock and store
-        answers[currentIndex] = selectedTemp;
-        locked[currentIndex] = true;
-        // Live score update (E1)
-        if (answers[currentIndex] === questions[currentIndex].c) {
-            score += 10;
-            scoreValue.textContent = String(score);
-            sSuccess();
-        } else {
-            sFail();
+        // SHOW EXPLANATION BOX (always)
+        const currentQ = questions[currentIndex];
+        if (currentQ.e) {
+            document.getElementById("explanationBox").textContent = currentQ.e;
+            document.getElementById("explanationBox").style.color = "";
+            document.getElementById("explanationBox").style.fontWeight = "normal";
         }
-        selectedTemp = null;
 
-        if (currentIndex < questions.length - 1) {
+        // STOP TIMER NOW
+        stopTimer();
+
+        // GO NEXT after short delay (1 second)
+        setTimeout(() => {
+
+            // if last question, go to submit
+            if (currentIndex === questions.length - 1) {
+                submitAll();
+                return;
+            }
+
             currentIndex++;
+            selectedTemp = null;
             renderQuestion(true);
-        } else {
-            renderQuestion(true); // last q keeps Submit All visible
-        }
+
+            // restart timer only if not expired on new question
+            if (!locked[currentIndex] && !timeExpired[currentIndex]) {
+                startTimer();
+            }
+
+        }, 5000);
     }
+
+
 
     function goPrev() {
         if (currentIndex > 0) {
             currentIndex--;
             selectedTemp = null;
             renderQuestion(true);
+            stopTimer();
+            if (!locked[currentIndex] && !timeExpired[currentIndex]) startTimer();
         }
     }
+
 
     // ---- Submit All ----
     function submitAll() {
@@ -377,6 +681,10 @@ document.addEventListener("DOMContentLoaded", () => {
         quizScreen.classList.add("hidden");
         endScreen.classList.remove("hidden");
         finalScore.textContent = String(score);
+
+        // stop timer at end of level
+        stopTimer();
+
 
         // Stop music at end of level (MLoop1)
         musicStop();
@@ -481,7 +789,9 @@ document.addEventListener("DOMContentLoaded", () => {
     prevBtn.addEventListener("click", () => { sClick(); goPrev(); });
     nextBtn.addEventListener("click", () => { sClick(); goNext(); });
     submitAllBtn.addEventListener("click", () => { sClick(); submitAll(); });
-    restartLevelBtn.addEventListener("click", () => { sClick(); restartLevel(); });
+    restartLevelBtn.addEventListener("click", () => {
+        startLevel(currentLevel);
+    });
 
     restartBtn.addEventListener("click", () => { sClick(); restartLevel(); });
     backToLevelsBtn.addEventListener("click", () => {
@@ -505,4 +815,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ---- Init ----
     applyLocks();
+});
+
+document.getElementById("splashImg").addEventListener("click", () => {
+    document.getElementById("splash").style.display = "none";
 });
