@@ -5,6 +5,7 @@ body {
     text-align: center;
     margin: 0;
     padding: 0;
+    position: relative;
 }
 
 header {
@@ -363,4 +364,19 @@ footer a {
 
 #timerBox {
     display: none;
+}
+
+body::before {
+    content:"";
+    position: fixed;
+    top:0; left:0;
+    width:100vw;
+    height:100vh;
+    background-image:url("../assets/logo.jpg");
+    background-repeat:no-repeat;
+    background-position:center;
+    background-size:350px;
+    opacity:0.12;  /* W2 */
+    pointer-events:none;
+    z-index:0 !important;
 }

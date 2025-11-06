@@ -398,39 +398,621 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     const INTERMEDIARY_QUESTIONS = [
-        { q: "Which section of the Constitution lists INEC among federal bodies?", a: ["Section 6", "Section 153", "Section 1", "Section 217"], c: 1 },
-        { q: "Under the Third Schedule, INEC can", a: ["Appoint judges", "Conduct and supervise elections", "Pass national budgets", "Command the armed forces"], c: 1 },
-        { q: "Separation of powers ensures that the Executive", a: ["Interprets laws", "Makes laws", "Enforces laws", "Selects juries"], c: 2 },
-        { q: "State governments are primarily responsible for", a: ["Foreign affairs", "Secondary education policy", "Printing currency", "Defense"], c: 1 },
-        { q: "A free and fair election includes", a: ["Intimidation", "Transparent counting", "Ballot stuffing", "Violence"], c: 1 },
-        { q: "The Nigerian Senate is part of the", a: ["Judiciary", "Executive", "Legislature", "Civil Service"], c: 2 },
-        { q: "The Constitution protects fundamental rights such as", a: ["Right to fair hearing", "Right to arbitrary arrest", "Right to censorship", "Right to misinformation"], c: 0 },
-        { q: "Which ID is commonly required to register for PVC?", a: ["BVN only", "International passport only", "Any valid recognized ID", "No ID"], c: 2 },
-        { q: "Primary responsibility of citizens during elections is to", a: ["Sell votes", "Participate peacefully and vote", "Disrupt polling units", "Avoid registration"], c: 1 },
-        { q: "Civic engagement includes", a: ["Spreading fake news", "Community meetings", "Inciting violence", "Ignoring local issues"], c: 1 },
-        { q: "The Judiciary’s independence helps to", a: ["Politicize trials", "Ensure rule of law", "Eliminate courts", "Control elections"], c: 1 },
-        { q: "What is the role of polling officials?", a: ["Campaigning for parties", "Maintaining order and counting votes", "Altering results", "Ignoring procedures"], c: 1 },
-        { q: "Which court is the highest in Nigeria?", a: ["Court of Appeal", "Supreme Court", "High Court", "National Industrial Court"], c: 1 },
-        { q: "A credible source when verifying claims is", a: ["Anonymous blog", "Official government or INEC site", "Random WhatsApp forward", "Unverified meme page"], c: 1 },
-        { q: "Civic education in schools helps students", a: ["Avoid participation", "Understand rights and duties", "Ignore governance", "Reject responsibility"], c: 1 }
+        {
+            q: "Which part of the Nigerian Constitution provides the fundamental rights of citizens?",
+            a: ["Chapter I", "Chapter II", "Chapter IV", "Chapter VII"],
+            c: 2,
+            e: "Chapter IV of the 1999 Constitution (as amended) guarantees rights such as freedom of expression, assembly, and fair hearing."
+        },
+        {
+            q: "What is the main function of the National Assembly in Nigeria?",
+            a: ["Interpreting laws", "Implementing policies", "Making laws and reviewing existing ones", "Recruiting civil servants"],
+            c: 2,
+            e: "The National Assembly is Nigeria’s federal legislature responsible for drafting, debating, and amending laws."
+        },
+        {
+            q: "What is the role of the State House of Assembly?",
+            a: ["Makes laws for the state", "Conducts elections", "Runs the Judiciary", "Controls the military"],
+            c: 0,
+            e: "Each state has a House of Assembly which creates laws that apply within that particular state."
+        },
+        {
+            q: "Who appoints the Chief Justice of Nigeria?",
+            a: ["National Assembly", "INEC", "President with Senate confirmation", "Supreme Court directly"],
+            c: 2,
+            e: "The President nominates the Chief Justice, but the Senate must confirm before appointment becomes valid."
+        },
+        {
+            q: "Which arm of government prosecutes criminal cases?",
+            a: ["Executive through the Attorney-General", "Judiciary", "Legislature", "Civil Defence"],
+            c: 0,
+            e: "The Attorney-General and Ministry of Justice (part of Executive) prosecute criminal cases on behalf of the government."
+        },
+        {
+            q: "What is the main function of the Judiciary in Nigeria?",
+            a: ["Hiring cabinet members", "Interpreting laws and ensuring justice", "Printing currency", "Recruiting ministers"],
+            c: 1,
+            e: "The Judiciary interprets the law and settles disputes to maintain justice and rule of law."
+        },
+        {
+            q: "Which agency investigates corruption and money laundering in Nigeria?",
+            a: ["INEC", "EFCC", "FRSC", "NCAA"],
+            c: 1,
+            e: "The EFCC targets financial crimes like embezzlement, internet fraud, and money laundering."
+        },
+        {
+            q: "Which agency focuses on regulating broadcast media in Nigeria?",
+            a: ["CBN", "NBC", "INEC", "NCC"],
+            c: 1,
+            e: "The National Broadcasting Commission monitors TV and radio content to ensure compliance with guidelines."
+        },
+        {
+            q: "Which agency regulates telecom and digital communication?",
+            a: ["NBA", "NCC", "NTA", "ICPC"],
+            c: 1,
+            e: "The Nigerian Communications Commission (NCC) regulates telecoms, ensures fair competition and protects consumers."
+        },
+        {
+            q: "Which agency fights corruption in public service?",
+            a: ["EFCC", "ICPC", "INEC", "Police"],
+            c: 1,
+            e: "ICPC focuses on corrupt practices inside government offices to improve transparency and accountability."
+        },
+        {
+            q: "Why is investigating information before sharing important?",
+            a: ["Truth is optional", "It prevents spreading misinformation", "Rumors are harmless", "All news online is accurate"],
+            c: 1,
+            e: "Verifying facts protects people from manipulation and maintains trust in the democratic process."
+        },
+        {
+            q: "Which source is most reliable for political information?",
+            a: ["Unverified blogs", "Fact-checking platforms", "Anonymous WhatsApp groups", "Random TikTok claims"],
+            c: 1,
+            e: "Fact-checkers review evidence and data to provide accurate information to the public."
+        },
+        {
+            q: "Which of the following is an example of misinformation?",
+            a: ["Verified election results from INEC", "Rumors shared without evidence", "Official government publications", "Peer-reviewed research"],
+            c: 1,
+            e: "Misinformation is false or inaccurate information that misleads people, especially during elections."
+        },
+        {
+            q: "Which practice helps voters avoid manipulation?",
+            a: ["Sharing every political post immediately", "Checking sources and fact-checking claims", "Relying on gossip", "Avoiding public debate"],
+            c: 1,
+            e: "Fact-checking helps voters separate facts from propaganda, protecting democracy."
+        },
+        {
+            q: "Why do democracies encourage free and independent media?",
+            a: ["To block public knowledge", "To help control citizens", "To promote transparency and accountability", "To support fake news"],
+            c: 2,
+            e: "A free media helps citizens hold government accountable and stay informed."
+        },
+        {
+            q: "Which institution conducts voter registration in Nigeria?",
+            a: ["INEC", "Judiciary", "Senate", "Ministry of Interior"],
+            c: 0,
+            e: "INEC registers voters, issues PVCs, and organizes elections nationwide."
+        },
+        {
+            q: "Which branch approves federal budgets and government spending?",
+            a: ["Executive alone", "Judiciary", "National Assembly", "INEC"],
+            c: 2,
+            e: "The National Assembly reviews and approves budgets to control how public funds are used."
+        },
+        {
+            q: "Which public institution controls the national budget implementation after approval?",
+            a: ["Executive branch", "Judiciary branch", "Legislature branch", "Civil society groups"],
+            c: 0,
+            e: "After the National Assembly approves the budget, the Executive implements and manages how funds are spent."
+        },
+        {
+            q: "Which agency can sanction broadcasting stations that spread hate speech?",
+            a: ["NBC", "INEC", "NCC", "Customs Service"],
+            c: 0,
+            e: "The National Broadcasting Commission regulates broadcast stations and can sanction them for violating content rules."
+        },
+        {
+            q: "Why is media literacy important for civic participation?",
+            a: ["It blocks citizens from asking questions", "It reduces access to information", "It helps citizens understand and verify news", "It supports the spread of rumors"],
+            c: 2,
+            e: "Media literacy strengthens democracy by helping citizens identify facts and reject misleading claims."
+        },
+        {
+            q: "Which organization can fact-check political claims during elections?",
+            a: ["Unknown Facebook pages", "Professional fact-checkers", "Deepfake creators", "Anonymous influencers"],
+            c: 1,
+            e: "Fact-checkers collect evidence and verify information so the public can trust the truth of political claims."
+        },
+        {
+            q: "Which branch of government can declare a law unconstitutional?",
+            a: ["Executive", "Judiciary", "Legislature", "INEC"],
+            c: 1,
+            e: "The Judiciary can strike down any law or policy that violates the Constitution."
+        },
+        {
+            q: "Why should citizens avoid spreading content that encourages violence?",
+            a: ["Violent posts attract more followers", "Violence benefits democracy", "Violence destroys peace and undermines elections", "Violence improves free speech"],
+            c: 2,
+            e: "Violence threatens stability and weakens democratic processes, especially during elections."
+        },
+        {
+            q: "What is the role of the Senate in Nigeria?",
+            a: ["Implements laws", "Approves presidential appointments and reviews bills", "Registers voters", "Prints money"],
+            c: 1,
+            e: "The Senate reviews bills and confirms key appointments like ministers and judges."
+        },
+        {
+            q: "Why is transparency critical in government spending?",
+            a: ["It increases corruption", "It helps the public track how funds are used", "It blocks accountability", "It reduces trust in government"],
+            c: 1,
+            e: "Transparency lets citizens see how public money is used, encouraging responsible governance."
+        },
+        {
+            q: "What can happen if citizens depend entirely on social media rumors?",
+            a: ["They make informed decisions", "They risk believing falsehoods", "Their civic knowledge grows stronger", "They become immune to propaganda"],
+            c: 1,
+            e: "Relying on rumors makes people vulnerable to manipulation during political periods."
+        },
+        {
+            q: "Which organization supervises all elections in Nigeria?",
+            a: ["Supreme Court", "INEC", "ICPC", "National Assembly"],
+            c: 1,
+            e: "INEC is the electoral authority responsible for organizing and regulating elections across Nigeria."
+        },
+        {
+            q: "Which arm of government executes national policies?",
+            a: ["Legislature", "Judiciary", "Executive", "Military"],
+            c: 2,
+            e: "The Executive carries out policies and runs the country’s daily administration through ministries."
+        },
+        {
+            q: "Why do citizens need access to credible public information?",
+            a: ["It promotes informed decision-making", "It discourages critical thinking", "It encourages propaganda", "It undermines unity"],
+            c: 0,
+            e: "Credible information empowers citizens to participate responsibly in democracy."
+        },
+        {
+            q: "Who has the power to declare a state of emergency in Nigeria?",
+            a: ["Senate alone", "President with National Assembly approval", "INEC chair", "Supreme Court justices"],
+            c: 1,
+            e: "The President proposes the emergency, but the National Assembly must approve according to the Constitution."
+        },
+        {
+            q: "What is the major danger of believing information without fact-checking?",
+            a: ["Better civic engagement", "Higher transparency", "Risk of manipulation and false decisions", "Improved governance"],
+            c: 2,
+            e: "Unverified information can mislead voters and damage democratic participation."
+        },
+        {
+            q: "Which institution investigates corruption inside public offices?",
+            a: ["EFCC", "ICPC", "INEC", "CBN"],
+            c: 1,
+            e: "ICPC’s mandate focuses on corrupt practices by government employees and public institutions."
+        },
+        {
+            q: "Which branch controls the national security agencies?",
+            a: ["Legislature", "Judiciary", "Executive", "INEC"],
+            c: 2,
+            e: "The Executive oversees law enforcement and national security through ministries and agencies."
+        },
+        {
+            q: "Why should citizens cross-check political information from multiple sources?",
+            a: ["To strengthen false rumors", "To avoid falling for misinformation", "To ignore democratic values", "To block fact-checkers"],
+            c: 1,
+            e: "Verifying across sources protects people from manipulation and encourages informed civic participation."
+        },
+        {
+            q: "Which agency regulates telephone networks and internet providers in Nigeria?",
+            a: ["NBC", "INEC", "NCC", "NTA"],
+            c: 2,
+            e: "The Nigerian Communications Commission regulates telecom services and ensures fair digital access."
+        },
+        {
+            q: "Why is freedom of the press valuable for democracy?",
+            a: ["It allows government to shut down dissent", "It prevents citizens from knowing the truth", "It supports transparency and keeps leaders accountable", "It reduces access to facts"],
+            c: 2,
+            e: "Free press exposes wrongdoing and informs the public, which strengthens accountability."
+        },
+        {
+            q: "Which body checks government spending and holds the Executive accountable?",
+            a: ["Judiciary", "Civil Society Groups", "National Assembly", "INEC"],
+            c: 2,
+            e: "The legislature reviews budgets and government actions to ensure funds are used correctly."
+        },
+        {
+            q: "Which media behaviour is most harmful during elections?",
+            a: ["Sharing verified results", "Promoting honest debates", "Spreading misinformation", "Educating voters"],
+            c: 2,
+            e: "Misinformation damages trust and can influence voters unfairly."
+        },
+        {
+            q: "Which platform should a citizen trust more for election results?",
+            a: ["Official INEC website", "Random influencer posts", "Anonymous WhatsApp forwards", "Unverified Twitter claims"],
+            c: 0,
+            e: "INEC is the legally authorized source for official election results."
+        },
+        {
+            q: "Which right allows journalists to report without fear of punishment?",
+            a: ["Right to rig elections", "Right to violence", "Freedom of expression", "Right to spread rumors"],
+            c: 2,
+            e: "Freedom of expression protects journalists and enables public access to truthful reporting."
+        },
+        {
+            q: "Why is fact-checking critical especially before elections?",
+            a: ["It promotes lies", "It protects voters from false claims", "It blocks free speech", "It confuses citizens"],
+            c: 1,
+            e: "Fact-checking prevents political actors from misleading voters to gain unfair advantage."
+        },
+        {
+            q: "Which institution can nullify an election if serious fraud is proven?",
+            a: ["INEC", "Supreme Court", "NBC", "ICPC"],
+            c: 1,
+            e: "The Supreme Court can nullify an election if evidence shows that legal procedures were violated."
+        },
+        {
+            q: "Which type of information should citizens be most careful about online?",
+            a: ["Official statistics", "Peer reviewed research", "Viral political rumors", "Accredited news reports"],
+            c: 2,
+            e: "Viral rumors often lack evidence and can manipulate public opinion."
+        },
+        {
+            q: "Which election document specifies how political campaigns must be conducted?",
+            a: ["Land Use Act", "Evidence Act", "Electoral Act", "National Youth Policy"],
+            c: 2,
+            e: "The Electoral Act includes guidelines for campaigns, results, transparency and penalties for violations."
+        },
+        {
+            q: "Which authority approves ministerial appointments in Nigeria?",
+            a: ["INEC Chairman", "House of Representatives", "Senate", "Attorney-General"],
+            c: 2,
+            e: "The Senate confirms and approves nominations for ministers and other key national offices."
+        },
+        {
+            q: "Why should citizens cross-check breaking news during election periods?",
+            a: ["Election periods produce more propaganda", "Rumors are always accurate", "Elections do not matter", "Fact-checking is illegal"],
+            c: 0,
+            e: "Political actors push false narratives to influence voters, so verification is essential."
+        },
+        {
+            q: "Which arm can remove a president from office through impeachment?",
+            a: ["Judiciary", "Senate and House of Representatives", "INEC", "Police"],
+            c: 1,
+            e: "The National Assembly can impeach the president if proven guilty of gross misconduct."
+        },
+        {
+            q: "Which organization educates voters on democratic participation?",
+            a: ["INEC", "NCC", "Customs", "NTA Sports"],
+            c: 0,
+            e: "INEC provides voter education programs and resources to promote informed participation."
+        },
+        {
+            q: "Why is media bias dangerous to democracy?",
+            a: ["Bias promotes equal opinions", "Bias ensures neutrality", "Bias can mislead people and distort decision-making", "Bias produces truth"],
+            c: 2,
+            e: "Media bias manipulates public opinion by presenting information in a skewed way."
+        },
+        {
+            q: "Which institution settles electoral disputes in Nigeria?",
+            a: ["INEC", "Courts and tribunals", "Ministry of Defence", "NTA"],
+            c: 1,
+            e: "Courts and election tribunals handle complaints and disputes arising from the electoral process."
+        }
     ];
 
     const ADVANCE_QUESTIONS = [
-        { q: "Federalism in Nigeria means", a: ["Unitary rule", "Power shared between federal and states", "Only local governments rule", "All power to traditional rulers"], c: 1 },
-        { q: "Which document outlines citizen rights in detail?", a: ["The Constitution (Chapter IV)", "Company and Allied Matters Act", "Penal Code", "Evidence Act"], c: 0 },
-        { q: "A hallmark of credible elections is", a: ["Ballot snatching", "Voter suppression", "Transparent collation", "Violence"], c: 2 },
-        { q: "Media literacy helps voters to", a: ["Believe everything", "Spot manipulation and bias", "Avoid information", "Rely on rumors"], c: 1 },
-        { q: "In Nigeria, who assents to bills passed by the National Assembly?", a: ["Chief Justice", "President", "INEC Chair", "Inspector General"], c: 1 },
-        { q: "An impeachment is conducted by the", a: ["Judiciary alone", "Legislature following constitutional process", "Military council", "Electoral umpire"], c: 1 },
-        { q: "Budget appropriation power lies with the", a: ["Judiciary", "Legislature", "Police", "INEC"], c: 1 },
-        { q: "Which is NOT a civic duty?", a: ["Paying taxes", "Obeying laws", "Serving the nation if required", "Spreading disinformation"], c: 3 },
-        { q: "Which principle guards against concentration of power?", a: ["Centralization", "Separation of powers", "Autocracy", "Oligarchy"], c: 1 },
-        { q: "Petitions on election results are handled by", a: ["Markets", "Electoral tribunals", "Local chiefs", "Social media"], c: 1 },
-        { q: "An informed electorate relies on", a: ["Verified data and credible sources", "Rumors", "Hearsay", "Satire"], c: 0 },
-        { q: "Freedom of expression allows citizens to", a: ["Incite violence", "Criticize within the law", "Defame freely", "Publish hate speech"], c: 1 },
-        { q: "INEC’s mandate includes", a: ["Drafting the Constitution", "Conducting elections", "Appointing ministers", "Passing laws"], c: 1 },
-        { q: "Rule of law implies", a: ["No one is above the law", "Leaders are above the law", "Laws are optional", "Only citizens obey"], c: 0 },
-        { q: "A peaceful transfer of power strengthens", a: ["Democratic stability", "Dictatorship", "Lawlessness", "Anarchy"], c: 0 }
+        {
+            q: "Which constitutional doctrine allows courts to void actions of other branches that violate the Constitution?",
+            a: ["Doctrine of Necessity", "Judicial Review", "Separation of Powers", "Federal Character"],
+            c: 1,
+            e: "Judicial review lets courts strike down unconstitutional laws or actions. It protects the supremacy of the Constitution."
+        },
+        {
+            q: "Which chamber initiates appropriation (money) bills under Nigeria’s federal legislature?",
+            a: ["Senate only", "House of Representatives only", "Either chamber", "Joint finance committee only"],
+            c: 1,
+            e: "The House of Representatives traditionally originates money bills before concurrence by the Senate."
+        },
+        {
+            q: "What is the primary purpose of legislative oversight?",
+            a: ["Drafting party manifestos", "Approving judicial promotions", "Holding the Executive accountable for implementation", "Running civil service recruitment"],
+            c: 2,
+            e: "Oversight examines how ministries and agencies execute laws, budgets, and policies to ensure accountability."
+        },
+        {
+            q: "Which organ can remove a governor for gross misconduct through impeachment?",
+            a: ["State High Court", "State House of Assembly", "INEC Resident Commissioner", "Federal Executive Council"],
+            c: 1,
+            e: "A State House of Assembly can impeach a governor subject to constitutional procedures and judicial review."
+        },
+        {
+            q: "Which best describes ‘federal character’ in Nigeria?",
+            a: ["Military zoning of states", "Equitable representation of groups in public service", "Judicial election of ministers", "Rotational presidency by decree"],
+            c: 1,
+            e: "Federal character promotes fairness by reflecting Nigeria’s diversity in public appointments and opportunities."
+        },
+        {
+            q: "Which body tries petitions arising from National Assembly elections?",
+            a: ["Court of Appeal sitting as Tribunal", "Supreme Court", "Federal High Court General Division", "National Industrial Court"],
+            c: 0,
+            e: "Election petitions are heard by specialized tribunals; appeals for NASS polls terminate at the Court of Appeal."
+        },
+        {
+            q: "Which court finally decides presidential election petitions in Nigeria?",
+            a: ["Federal High Court", "Court of Appeal", "Supreme Court", "Customary Court of Appeal"],
+            c: 2,
+            e: "Presidential election petitions end at the Supreme Court, which gives the final binding decision."
+        },
+        {
+            q: "What is a key role of the Public Accounts Committees in legislatures?",
+            a: ["Select cabinet members", "Audit and review government expenditures", "Register political parties", "Approve foreign judges"],
+            c: 1,
+            e: "PACs scrutinize audit reports and spending to ensure funds are used lawfully and efficiently."
+        },
+        {
+            q: "Which institution issues binding interpretations of the Constitution?",
+            a: ["Independent National Electoral Commission", "National Council of State", "The Courts", "Code of Conduct Bureau"],
+            c: 2,
+            e: "Only courts give authoritative interpretations of constitutional provisions and resolve constitutional disputes."
+        },
+        {
+            q: "Which agency enforces the Code of Conduct for public officers?",
+            a: ["Code of Conduct Bureau and Tribunal", "Civil Service Commission", "INEC", "NTA"],
+            c: 0,
+            e: "The CCB investigates asset declarations and the CCT tries violations to promote integrity in public service."
+        },
+        {
+            q: "What is the main danger of coordinated inauthentic behavior online?",
+            a: ["Higher platform security", "Better civic trust", "Manipulated public opinion through fake networks", "Improved data ethics"],
+            c: 2,
+            e: "Troll farms and botnets simulate consensus, distort narratives, and mislead voters at scale."
+        },
+        {
+            q: "Which signal most reliably indicates a deepfake video?",
+            a: ["High resolution only", "Verified watermark from a party", "Facial artifacts and mismatched audio-lip sync", "Large number of shares"],
+            c: 2,
+            e: "Artifacts, lighting inconsistencies, and audio desync are technical cues. Shares or watermarks are not proof of authenticity."
+        },
+        {
+            q: "Why do platforms label ‘state-controlled media’ sometimes?",
+            a: ["To promote engagement", "To disclose possible government influence on content", "To ban domestic outlets", "To rank news by likes"],
+            c: 1,
+            e: "Labels help users evaluate editorial independence and potential influence, aiding informed consumption."
+        },
+        {
+            q: "Which open-data practice improves election transparency?",
+            a: ["Results locked as images only", "Machine-readable polling unit results", "Announcing totals without unit data", "Prohibiting observers’ access"],
+            c: 1,
+            e: "Publishing granular, machine-readable results enables independent verification and credible parallel checks."
+        },
+        {
+            q: "A ‘metadata’ check on a viral document can help determine what?",
+            a: ["Preferred party of the author", "Exact vote totals", "Creation date and edit trail", "Legal validity in court automatically"],
+            c: 2,
+            e: "Metadata reveals when a file was created or modified, supporting authenticity checks but not legal conclusions by itself."
+        },
+        {
+            q: "Which is a red flag in a political infographic?",
+            a: ["Source link provided", "Methodology stated", "No source and exaggerated numbers", "Time-stamped dataset"],
+            c: 2,
+            e: "Lack of sources and inflated figures indicate propaganda; credible visuals cite data and methods."
+        },
+        {
+            q: "Which body manages asset declaration for top officials?",
+            a: ["Code of Conduct Bureau", "NCC", "INEC", "EFCC only"],
+            c: 0,
+            e: "The CCB receives and verifies asset declarations; the CCT prosecutes violations when necessary."
+        },
+        {
+            q: "Which arm proposes most bills related to revenue and administration?",
+            a: ["Judiciary", "Civil society", "Executive", "INEC"],
+            c: 2,
+            e: "The Executive drafts many policy and budget-related bills which then go through legislative scrutiny."
+        },
+        {
+            q: "Which best practice limits algorithmic manipulation during campaigns?",
+            a: ["No content moderation", "Transparent ad libraries and spending data", "Shadow-banning opponents", "Banning all political speech"],
+            c: 1,
+            e: "Public ad libraries and spend disclosures allow watchdogs to monitor microtargeting and influence operations."
+        },
+        {
+            q: "A reliable approach to verify a purported ‘INEC’ result sheet online is to",
+            a: ["Check watermark only", "Compare with official portal uploads and serial numbers", "Trust the most shared version", "Use screenshot color tone"],
+            c: 1,
+            e: "Cross-reference serials and tallies with the official results portal and observer reports before sharing."
+        },
+        {
+            q: "Which court first hears most federal electoral petitions?",
+            a: ["Supreme Court", "Federal High Court", "Election Tribunal at first instance", "Customary Court"],
+            c: 2,
+            e: "Special tribunals are constituted to hear electoral disputes initially before appellate review."
+        },
+        {
+            q: "What is the principal legal basis for press freedom in Nigeria?",
+            a: ["Electoral Act section on media", "Criminal Code carve-out", "Constitutional freedom of expression", "NBC administrative circular"],
+            c: 2,
+            e: "Freedom of expression in the Constitution underpins a free press, subject to lawful limitations."
+        },
+        {
+            q: "Which oversight tool can the National Assembly use to compel testimony?",
+            a: ["Friendly request", "Private letters only", "Subpoena powers under its rules and law", "Executive directive"],
+            c: 2,
+            e: "Committees can summon witnesses and demand documents to advance investigations into public interest matters."
+        },
+        {
+            q: "What is a common tactic in computational propaganda?",
+            a: ["Transparent sourcing", "Coordinated hashtag floods with bots", "Open datasets for verification", "Independent audits of ads"],
+            c: 1,
+            e: "Bot swarms and scripted accounts amplify narratives, creating artificial trends that mislead audiences."
+        },
+        {
+            q: "Which is the final court for governorship election appeals?",
+            a: ["High Court", "Court of Appeal", "Supreme Court", "Tribunal"],
+            c: 2,
+            e: "Like presidential petitions, governorship election appeals culminate at the Supreme Court."
+        },
+        {
+            q: "Which agency can prosecute money-laundering linked to political financing?",
+            a: ["NTA", "INEC media unit", "EFCC", "National Orientation Agency"],
+            c: 2,
+            e: "EFCC investigates and prosecutes laundering and financial crimes that may taint political funding."
+        },
+        {
+            q: "Which ethical rule helps journalists avoid amplifying falsehoods?",
+            a: ["Publish first, verify later", "Clickbait for traffic", "Verification before amplification", "Anonymous rumor quoting"],
+            c: 2,
+            e: "Verifying claims before repeating them protects audiences from misinformation and maintains trust."
+        },
+        {
+            q: "What is the legal effect of a Supreme Court judgment?",
+            a: ["Advisory only", "Binding precedent nationwide", "Applicable to one state only", "Must be reviewed by tribunals"],
+            c: 1,
+            e: "Supreme Court decisions bind lower courts and guide future cases across the federation."
+        },
+        {
+            q: "Which step best validates a viral polling-unit ‘result’ photo?",
+            a: ["Share to crowdsource truth", "Check location EXIF and match figures with official uploads", "Count comments below", "Ask an influencer"],
+            c: 1,
+            e: "Geodata and figure-matching with official portals or observer logs help confirm authenticity."
+        },
+        {
+            q: "Which office prepares the federal budget proposal?",
+            a: ["Office of the Chief Justice", "Office of the Auditor-General", "Federal Ministry of Finance/Budget Office (Executive)", "Senate Appropriations Unit"],
+            c: 2,
+            e: "The Executive through Finance/Budget offices drafts proposals which the legislature debates and approves."
+        },
+        {
+            q: "Which body can disqualify a candidate for failing asset declaration rules?",
+            a: ["Code of Conduct Tribunal", "INEC media team", "Political party chair", "Civil Service Commission"],
+            c: 0,
+            e: "Breaches of the Code of Conduct can lead to CCT sanctions, including disqualification where applicable."
+        },
+        {
+            q: "What is the key safeguard of ‘separation of powers’?",
+            a: ["Fusion of all powers in one branch", "Mutual checks among branches", "Total independence without review", "Direct party control of courts"],
+            c: 1,
+            e: "Each branch limits the others to prevent abuse; checks and balances uphold constitutional order."
+        },
+        {
+            q: "A quick test to vet a ‘scandal’ tweet is to",
+            a: ["Trust engagement numbers", "Search for corroboration in credible outlets and primary documents", "Share instantly to friends", "Judge by meme quality"],
+            c: 1,
+            e: "Corroboration by established outlets and verifiable records reduces the risk of spreading falsehoods."
+        },
+        {
+            q: "Which body audits government accounts and issues audit queries?",
+            a: ["Auditor-General for the Federation", "Attorney-General", "INEC", "NBC"],
+            c: 0,
+            e: "The Auditor-General examines public accounts and reports irregularities to the legislature for action."
+        },
+        {
+            q: "Which platform feature improves transparency of political ads?",
+            a: ["Hidden targeting fields", "Opaque billing", "Public ad libraries searchable by sponsor", "Auto-delete after publishing"],
+            c: 2,
+            e: "Ad libraries allow citizens and researchers to track who paid, how much, and who was targeted."
+        },
+        {
+            q: "How can citizens track constituency projects credibly?",
+            a: ["Anonymous blogs", "Official procurement portals and FOI requests", "Private DM groups", "Only campaign flyers"],
+            c: 1,
+            e: "Open contracting data and FOI laws help verify project awards, timelines, and actual delivery."
+        },
+        {
+            q: "Which is a legal limit on expression under Nigerian law?",
+            a: ["Truthful criticism of leaders", "Calls to violence or incitement", "Publishing verified facts", "Peaceful satire"],
+            c: 1,
+            e: "Speech that incites violence can be lawfully restricted to protect public order and safety."
+        },
+        {
+            q: "Which body resolves inter-governmental disputes between FG and states?",
+            a: ["Revenue Mobilization Commission", "Supreme Court original jurisdiction", "NCC board", "Senate leadership"],
+            c: 1,
+            e: "Certain disputes between levels of government can be brought directly before the Supreme Court."
+        },
+        {
+            q: "A reliable way to detect a coordinated hashtag campaign is to",
+            a: ["Check random memes", "Look for synchronized posting patterns and identical scripts", "Count likes alone", "Read only top comments"],
+            c: 1,
+            e: "Synchronized timing and repetitive text across many accounts often signals coordination."
+        },
+        {
+            q: "Which tribunal handles asset declaration violations by public officers?",
+            a: ["Election Petition Tribunal", "Code of Conduct Tribunal", "Industrial Court", "Customary Court"],
+            c: 1,
+            e: "The CCT tries breaches of the Code of Conduct, such as false asset declarations or conflicts of interest."
+        },
+        {
+            q: "Which oversight action can follow a damning audit report?",
+            a: ["Ignore it publicly", "Referral to anti-corruption agencies and hearings", "Delete the report", "Punish whistleblowers automatically"],
+            c: 1,
+            e: "Parliamentary hearings and referrals to EFCC/ICPC can enforce accountability and recover losses."
+        },
+        {
+            q: "What improves the credibility of citizen observation networks?",
+            a: ["Unverified screenshots", "Standardized forms, geo-tags and open datasets", "Only anonymous tips", "No training for volunteers"],
+            c: 1,
+            e: "Structured data with location evidence and public access enables independent verification."
+        },
+        {
+            q: "Which court typically hears pre-election matters (e.g., party primaries)?",
+            a: ["Customary Court", "Federal/State High Courts", "Election Tribunals first", "Magistrate Courts"],
+            c: 1,
+            e: "Pre-election disputes often start in High Courts under the Electoral Act and related party laws."
+        },
+        {
+            q: "Which rule reduces dataset ‘cherry-picking’ in political claims?",
+            a: ["Hide raw data", "Provide methodology and full dataset", "Use only a single chart", "Delete contradictory figures"],
+            c: 1,
+            e: "Releasing methods and complete data allows independent replication and guards against selective use."
+        },
+        {
+            q: "Which best describes ‘security votes’ at advanced oversight level?",
+            a: ["Fully audited line items", "Discretionary funds with limited transparency", "Citizen crowdfunding", "Court fines"],
+            c: 1,
+            e: "Security votes are opaque discretionary funds; robust oversight demands clearer rules and reporting."
+        },
+        {
+            q: "Which legal principle protects accused persons in trials?",
+            a: ["Presumption of guilt", "Strict liability always", "Presumption of innocence and fair hearing", "Public opinion rule"],
+            c: 2,
+            e: "Due process requires fair hearing and presumes innocence until guilt is proven by competent evidence."
+        },
+        {
+            q: "Which sign suggests a forged official letter circulating online?",
+            a: ["Correct letterhead and reference", "Typos, wrong titles, and unverifiable signatories", "Citations to statutes", "Stamped date"],
+            c: 1,
+            e: "Inconsistent titles, grammar errors, and missing registry traces often indicate forgery."
+        },
+        {
+            q: "Which actor can request information using the Freedom of Information framework?",
+            a: ["Only elected officials", "Any citizen or organization following procedures", "Only journalists", "Only lawyers"],
+            c: 1,
+            e: "FOI frameworks allow citizens and groups to request official records to advance transparency and accountability."
+        },
+        {
+            q: "What strengthens credibility when publishing investigative findings?",
+            a: ["Withholding evidence", "Publishing documents, data and methodology", "Relying on anonymous rumors", "Avoiding right of reply"],
+            c: 1,
+            e: "Sharing underlying records and methods helps audiences verify conclusions and builds public trust."
+        },
+        {
+            q: "Which statement about appellate hierarchy is correct?",
+            a: ["Tribunal > Supreme Court", "High Court > Court of Appeal", "Court of Appeal > High Courts", "Magistrate > Court of Appeal"],
+            c: 2,
+            e: "Appeals move upward: from trial courts to the Court of Appeal, and ultimately to the Supreme Court."
+        },
+        {
+            q: "Which practice best protects private data in civic tech apps?",
+            a: ["Logging all user metadata forever", "Encrypting sensitive data and minimizing collection", "Publishing raw logs", "Sharing datasets by default"],
+            c: 1,
+            e: "Data minimization and encryption safeguard privacy while allowing legitimate civic-use features."
+        },
+        {
+            q: "What is the value of parallel vote tabulation (PVT) by observers?",
+            a: ["Replaces official results", "Offers independent statistical check on results integrity", "Counts social media likes", "Ends court petitions"],
+            c: 1,
+            e: "PVT independently samples and projects results to detect anomalies and bolster confidence in outcomes."
+        }
     ];
 
     // ---- Progress storage per level ----
