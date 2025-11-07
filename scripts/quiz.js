@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const prevBtn = document.getElementById("prevBtn");
     const nextBtn = document.getElementById("nextBtn");
     const submitAllBtn = document.getElementById("submitAllBtn");
+    const confirmBtn = document.getElementById("confirmBtn");
     const restartLevelBtn = document.getElementById("restartLevelBtn");
 
     // Progress + score
@@ -81,21 +82,28 @@ document.addEventListener("DOMContentLoaded", () => {
                 updateTimerFace("⏳");
                 disableOptions();
 
-                // permitir avanzar aun sin seleccionar
-                if (currentIndex === questions.length - 1) {
-                    submitAllBtn.disabled = false;
-                } else {
-                    nextBtn.disabled = false;
-                }
-
-                // mensaje
-                const old = quizScreen.querySelector(".timeup-msg");
-                if (old) old.remove();
+                // show red msg
                 document.getElementById("explanationBox").textContent = "Time is up! ⏳";
                 document.getElementById("explanationBox").style.color = "#cc0000";
                 document.getElementById("explanationBox").style.fontWeight = "bold";
 
+                // enable navigation immediately
+                prevBtn.disabled = (currentIndex === 0);
+                nextBtn.disabled = (currentIndex === questions.length - 1);
+                if (currentIndex === questions.length - 1) {
+                    nextBtn.classList.add("hidden");
+                    confirmBtn.classList.remove("hidden");
+                    submitAllBtn.classList.remove("hidden");
+
+                    // enable submit all if locked OR answer already selected
+                    submitAllBtn.disabled = !(locked[currentIndex] || answers[currentIndex] !== null);
+                } else {
+                    nextBtn.classList.remove("hidden");
+                    confirmBtn.classList.remove("hidden");
+                    submitAllBtn.classList.add("hidden");
+                }
             }
+
         }, 1000);
     }
 
@@ -1122,31 +1130,35 @@ document.addEventListener("DOMContentLoaded", () => {
             if (withFade) applyFade(btn);
         });
 
+        // PREVIOUS
+        prevBtn.disabled = (currentIndex === 0);
 
-
-
-        // Buttons state
-        // PREV solo permitido si YA expiró o si YA está locked
-        if (currentIndex === 0) {
-            prevBtn.disabled = true;
-        } else {
-            prevBtn.disabled = (!locked[currentIndex] && !timeExpired[currentIndex]);
-        }
+        // default next / confirm / submit states
         nextBtn.classList.remove("hidden");
+        confirmBtn.classList.remove("hidden");
         submitAllBtn.classList.add("hidden");
+
+        // last question → show only Previous + Submit All
+        if (currentIndex === questions.length - 1) {
+            nextBtn.classList.add("hidden");
+            confirmBtn.classList.add("hidden");
+            submitAllBtn.classList.remove("hidden");
+            submitAllBtn.disabled = false;
+        }
+
+        // if locked → enable next (except last question)
+        if (locked[currentIndex]) {
+            if (currentIndex < questions.length - 1) {
+                nextBtn.disabled = false;
+            }
+            confirmBtn.disabled = true;
+        }
 
         // Next disabled until user selects (if not locked)
         if (locked[currentIndex]) {
             nextBtn.disabled = false;
         } else {
             nextBtn.disabled = (selectedTemp === null);
-        }
-
-        // Last question → show Submit All
-        if (currentIndex === questions.length - 1) {
-            nextBtn.classList.add("hidden");
-            submitAllBtn.classList.remove("hidden");
-            submitAllBtn.disabled = locked[currentIndex] ? false : (selectedTemp === null);
         }
 
         if (withFade) applyFade(questionText);
@@ -1163,22 +1175,25 @@ document.addEventListener("DOMContentLoaded", () => {
             disableOptions();
         }
 
+        // if locked and not expired → show explanation again
+        if (locked[currentIndex] && !timeExpired[currentIndex]) {
+            document.getElementById("explanationBox").textContent = questions[currentIndex].e || "";
+        }
+
     }
 
-
     function onSelect(index, btn) {
-        if (timeExpired[currentIndex] || locked[currentIndex]) return;
-
         selectedTemp = index;
         sClick();
-        Array.from(optionsContainer.querySelectorAll(".optionBtn")).forEach(b => b.classList.remove("selected"));
+
+        Array.from(optionsContainer.querySelectorAll(".optionBtn"))
+            .forEach(b => b.classList.remove("selected"));
         btn.classList.add("selected");
 
-        if (currentIndex === questions.length - 1) {
-            submitAllBtn.disabled = false;
-        } else {
-            nextBtn.disabled = false;
-        }
+        // user picked something → ONLY enable confirm
+        confirmBtn.disabled = false;
+        nextBtn.disabled = true;
+        prevBtn.disabled = true;
     }
 
     // ---- Navigation ----
@@ -1214,39 +1229,51 @@ document.addEventListener("DOMContentLoaded", () => {
         // STOP TIMER NOW
         stopTimer();
 
-        // GO NEXT after short delay (1 second)
-        setTimeout(() => {
+        // go next immediately
+        if (currentIndex === questions.length - 1) {
+            submitAll();
+            return;
+        }
 
-            // if last question, go to submit
-            if (currentIndex === questions.length - 1) {
-                submitAll();
-                return;
-            }
+        currentIndex++;
+        selectedTemp = null;
+        renderQuestion(true);
 
-            currentIndex++;
-            selectedTemp = null;
-            renderQuestion(true);
+        // restart timer only if not locked or expired
+        if (!locked[currentIndex] && !timeExpired[currentIndex]) {
+            startTimer();
+        }
 
-            // restart timer only if not expired on new question
-            if (!locked[currentIndex] && !timeExpired[currentIndex]) {
-                startTimer();
-            }
-
-        }, 5000);
     }
-
-
 
     function goPrev() {
         if (currentIndex > 0) {
+
             currentIndex--;
             selectedTemp = null;
+
+            // show the older question
             renderQuestion(true);
+
+            // NEVER restart timer when going backwards
             stopTimer();
-            if (!locked[currentIndex] && !timeExpired[currentIndex]) startTimer();
+
+            // disable select if locked or expired
+            if (locked[currentIndex] || timeExpired[currentIndex]) {
+                disableOptions();
+            }
+
+            // make sure confirm is disabled when going backwards
+            confirmBtn.disabled = true;
+
+            // next always available unless it's last question
+            nextBtn.disabled = (currentIndex === questions.length - 1);
+
+            // previous disabled only if index = 0
+            prevBtn.disabled = (currentIndex === 0);
+
         }
     }
-
 
     // ---- Submit All ----
     function submitAll() {
@@ -1278,8 +1305,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (score > p[levelKey]) p[levelKey] = score;
         setStoredProgress(p);
 
-        // Unlock logic
-        const needed = Math.round(getBank().length * 10 * PERCENT_TO_UNLOCK);
+        // total always 150 (15 q * 10 pts)
+        const needed = 90; // 60%
         let nextLevelName = null;
         if (score >= needed) {
             sSuccess();
@@ -1305,7 +1332,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function restartLevel() {
-        questions = getBank();
+        let pool = getBank().sort(() => Math.random() - 0.5);
+        questions = pool.slice(0, 15);
         answers = new Array(questions.length).fill(null);
         locked = new Array(questions.length).fill(false);
         currentIndex = 0;
@@ -1371,6 +1399,37 @@ document.addEventListener("DOMContentLoaded", () => {
     prevBtn.addEventListener("click", () => { sClick(); goPrev(); });
     nextBtn.addEventListener("click", () => { sClick(); goNext(); });
     submitAllBtn.addEventListener("click", () => { sClick(); submitAll(); });
+    confirmBtn.addEventListener("click", () => {
+        if (selectedTemp === null) return;
+
+        // lock answer permanently
+        answers[currentIndex] = selectedTemp;
+        locked[currentIndex] = true;
+        stopTimer();
+        disableOptions();   // <--- ESTA ES LA LÍNEA CLAVE
+
+        // evaluate
+        if (answers[currentIndex] === questions[currentIndex].c) {
+            score += 10;
+            scoreValue.textContent = String(score);
+            sSuccess();
+        } else {
+            sFail();
+        }
+
+        explanationBox.textContent = questions[currentIndex].e || "";
+
+        // enable navigation NOW
+        prevBtn.disabled = (currentIndex === 0);
+        nextBtn.disabled = (currentIndex === questions.length - 1);
+        confirmBtn.disabled = true;
+        selectedTemp = null;
+        // *** FORCE ENABLE SUBMIT WHEN ON LAST QUESTION ***
+        if (currentIndex === questions.length - 1) {
+            submitAllBtn.disabled = false;
+        }
+    });
+
     restartLevelBtn.addEventListener("click", () => {
         startLevel(currentLevel);
     });
@@ -1397,8 +1456,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ---- Init ----
     applyLocks();
-});
-
-document.getElementById("splashImg").addEventListener("click", () => {
-    document.getElementById("splash").style.display = "none";
 });

@@ -11,10 +11,6 @@
 
 <body>
 
-    <div id="splash">
-        <img src="assets/featured.jpg" alt="featured" id="splashImg">
-    </div>
-
     <header>
         <img src="assets/logo.jpg" alt="CivicPlay Logo" class="logo" style="cursor:pointer"
             onclick="location.href='index.html'" />
@@ -62,10 +58,12 @@
 
             <div class="quizActions">
                 <div class="actionRow">
-                    <button id="prevBtn" class="secondary">Previous</button>
+                    <button id="prevBtn" class="secondary" disabled>Previous</button>
+                    <button id="confirmBtn" class="primary" disabled>Confirm Answer</button>
                     <button id="nextBtn" class="secondary" disabled>Next</button>
                     <button id="submitAllBtn" class="success hidden">Submit All</button>
                 </div>
+
                 <div class="restartRow">
                     <button id="restartLevelBtn" class="ghost">Restart Level</button>
                 </div>
