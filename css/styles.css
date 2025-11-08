@@ -5,12 +5,12 @@ body {
     margin: 0;
     padding: 0;
     position: relative;
-    /* REMOVE the direct background here */
 }
 
 header {
-    background: #008751;
-    color: #FFFFFF;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(4px);
+    color: #008751;
     padding: 1.5rem 1rem;
 }
 
@@ -37,10 +37,11 @@ header p {
 main {
     max-width: 760px;
     margin: 2rem auto;
-    background: #FFFFFF;
+    background: rgba(255, 255, 255, 0.55);
     padding: 2rem;
     border-radius: 12px;
     box-shadow: 0 0 12px rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(1px);
 }
 
 .hidden {
@@ -347,23 +348,21 @@ footer a {
     display: none;
 }
 
-/* WATERMARK BACKGROUND (final) */
+/* WATERMARK BACKGROUND (bigger + darker) */
 body::before {
     content: "";
     position: fixed;
     inset: 0;
-    background-image: url("../assets/childflag.jpeg");
+    background-image: url("../assets/logo.jpg");
     background-repeat: no-repeat;
     background-position: center;
-    background-size: contain;
+
+    /* bigger logo size */
+    background-size: 720px;
+
+    /* darker opacity so it stands out */
     opacity: 0.28;
-    /* darker */
+
     pointer-events: none;
     z-index: -1;
-}
-
-main {
-    background: rgba(255, 255, 255, 0.55) !important;
-    /* 55% white */
-    backdrop-filter: blur(1px);
 }
