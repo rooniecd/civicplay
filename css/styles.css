@@ -8,10 +8,25 @@ body {
 }
 
 header {
-    background: rgba(255, 255, 255, 0.85);
+    position: relative;
+    background: rgba(255, 255, 255, 0.88);
     backdrop-filter: blur(4px);
     color: #008751;
     padding: 1.5rem 1rem;
+    overflow: hidden;
+    /* needed so watermark stays inside header ONLY */
+}
+
+header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("../assets/childflag.jpeg") center/420px no-repeat;
+    opacity: 0.17;
+    /* adjust if Caleb wants darker/lighter */
+    pointer-events: none;
+    z-index: -1;
+    background-size: cover;
 }
 
 .logo {
@@ -346,23 +361,4 @@ footer a {
 
 #timerBox {
     display: none;
-}
-
-/* WATERMARK BACKGROUND (bigger + darker) */
-body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background-image: url("../assets/logo.jpg");
-    background-repeat: no-repeat;
-    background-position: center;
-
-    /* bigger logo size */
-    background-size: 720px;
-
-    /* darker opacity so it stands out */
-    opacity: 0.28;
-
-    pointer-events: none;
-    z-index: -1;
 }
