@@ -82,20 +82,32 @@ document.addEventListener("DOMContentLoaded", () => {
                 updateTimerFace("⏳");
                 disableOptions();
 
-                // show red msg
-                document.getElementById("explanationBox").textContent = "Time is up! ⏳";
+                // show red msg + correct answer + explanation
+                // highlight the correct button
+                const optButtons = document.querySelectorAll(".optionBtn");
+                let correctIndex = questions[currentIndex].c;
+                optButtons.forEach((btn) => {
+                    if (btn.textContent.trim() === questions[currentIndex].a[correctIndex]) {
+                        btn.classList.add("correctHighlight");
+                    }
+                });
+
+                document.getElementById("explanationBox").textContent =
+                    "Time is up! ⏳  —  Correct Answer: "
+                    + questions[currentIndex].a[questions[currentIndex].c]
+                    + "\n" + (questions[currentIndex].e || "");
+
                 document.getElementById("explanationBox").style.color = "#cc0000";
                 document.getElementById("explanationBox").style.fontWeight = "bold";
 
                 // enable navigation immediately
                 prevBtn.disabled = (currentIndex === 0);
                 nextBtn.disabled = (currentIndex === questions.length - 1);
+
                 if (currentIndex === questions.length - 1) {
                     nextBtn.classList.add("hidden");
                     confirmBtn.classList.remove("hidden");
                     submitAllBtn.classList.remove("hidden");
-
-                    // enable submit all if locked OR answer already selected
                     submitAllBtn.disabled = !(locked[currentIndex] || answers[currentIndex] !== null);
                 } else {
                     nextBtn.classList.remove("hidden");
@@ -103,7 +115,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     submitAllBtn.classList.add("hidden");
                 }
             }
-
         }, 1000);
     }
 
@@ -1102,10 +1113,31 @@ document.addEventListener("DOMContentLoaded", () => {
         qIndexEl.textContent = String(currentIndex + 1);
         questionText.textContent = q.q;
         optionsContainer.innerHTML = "";
-        document.getElementById("explanationBox").textContent = "";
-        document.getElementById("explanationBox").style.color = "";
-        document.getElementById("explanationBox").style.fontWeight = "";
+        // clean only if first time
+        if (!locked[currentIndex] && !timeExpired[currentIndex]) {
+            document.getElementById("explanationBox").textContent = "";
+            document.getElementById("explanationBox").style.color = "";
+            document.getElementById("explanationBox").style.fontWeight = "";
+        } else {
+            // re-show explanation if already locked
+            let exp = questions[currentIndex].e || "";
+            if (timeExpired[currentIndex]) {
+                exp = "Time is up! ⏳\n\nCorrect Answer: " + questions[currentIndex].a[questions[currentIndex].c] + "\n\n" + exp;
+                document.getElementById("explanationBox").style.color = "#cc0000";
+                document.getElementById("explanationBox").style.fontWeight = "bold";
+            }
+            document.getElementById("explanationBox").textContent = exp;
 
+            // re-mark correct button
+            requestAnimationFrame(() => {
+                const optButtons = document.querySelectorAll(".optionBtn");
+                optButtons.forEach(btn => {
+                    if (btn.textContent.trim() === questions[currentIndex].a[questions[currentIndex].c]) {
+                        btn.classList.add("correctHighlight");
+                    }
+                });
+            });
+        }
 
         // Randomize options while preserving correct index reference
         let options = q.a.map((opt, idx) => ({ opt, idx })).sort(() => Math.random() - 0.5);
@@ -1117,6 +1149,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const btn = document.createElement("button");
             btn.textContent = opt;
             btn.className = "optionBtn";
+            btn.dataset.ans = String(i); // <-- add this
+
             if (answers[currentIndex] !== null && answers[currentIndex] === i) {
                 btn.classList.add("selected");
             }
@@ -1416,6 +1450,14 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             sFail();
         }
+
+        // highlight correct answer ALWAYS
+        requestAnimationFrame(() => {
+            const correctIdx = questions[currentIndex].c;
+            const correctBtn = document.querySelector(`.optionBtn[data-ans="${correctIdx}"]`);
+            if (correctBtn) correctBtn.classList.add("correctHighlight");
+        });
+
 
         explanationBox.textContent = questions[currentIndex].e || "";
 

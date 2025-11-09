@@ -362,3 +362,17 @@ footer a {
 #timerBox {
     display: none;
 }
+
+.correctHighlight {
+    background: #b1ffd3 !important;
+    border-color: #00ab61 !important;
+    color: #003d28 !important;
+    font-weight: bold;
+}
+
+/* Highlight for correct answer after confirm/timeup */
+.optionBtn.correctHighlight {
+    border-color: #1a7f37;
+    background: #e6f4ea;
+    color: #0b4d2b;
+}
