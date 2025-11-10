@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CivicPlay | Play. Learn. Build Africa’s Future</title>
     <link rel="stylesheet" href="css/styles.css?v=4" />
-    <script src="scripts/quiz.js?v=4" defer></script>
+    <script src="scripts/quiz.js?v=6" defer></script>
 </head>
 
 <body>
@@ -33,9 +33,6 @@
                 <button id="basicBtn" class="levelBtn">Basic</button>
                 <button id="intermediaryBtn" class="levelBtn locked" disabled>Intermediary</button>
                 <button id="advanceBtn" class="levelBtn locked" disabled>Advance</button>
-            </div>
-            <div id="unlockInfo" class="hint">
-                Unlock next level by scoring at least 90 points on the current level.
             </div>
         </section>
 
@@ -83,6 +80,19 @@
             </div>
         </section>
     </main>
+
+    <!-- Name modal -->
+    <div id="nameModal" class="hidden"
+        style="
+position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:9999;">
+        <div style="background:white; padding:1.2rem 1.6rem; border-radius:12px; width:300px; text-align:center;">
+            <h3>Enter Your Name</h3>
+            <input id="playerNameInput" type="text" placeholder="Your Civic Name"
+                style="width:100%; padding:.7rem; border-radius:8px; border:1px solid #ccc; margin:.8rem 0;">
+            <button id="saveNameBtn"
+                style="width:100%; padding:.7rem; border-radius:8px; background:#008751; color:white;border:none;cursor:pointer;">Continue</button>
+        </div>
+    </div>
 
     <footer>
         <p>© 2025 CivicPlay | Built for Africa’s Youth</p>

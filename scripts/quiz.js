@@ -1390,15 +1390,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function updateLeaderboard() {
         const key = `leaderboard_${currentLevel.toLowerCase()}`;
+
+        // read current leaderboard
         let leaderboard = JSON.parse(localStorage.getItem(key)) || [];
-        leaderboard.push(score);
-        leaderboard.sort((a, b) => b - a);
-        leaderboard = leaderboard.slice(0, 5);
+
+        // --- A) remove corrupted entries (undefined, null, etc)
+        leaderboard = leaderboard.filter(entry => {
+            return entry &&
+                typeof entry.name === "string" &&
+                entry.name.trim() !== "" &&
+                typeof entry.score === "number" &&
+                !isNaN(entry.score);
+        });
+
+        // --- B) push new entry
+        leaderboard.push({
+            name: localStorage.getItem("civicName") || "Player",
+            score: score
+        });
+
+        // sort high first
+        leaderboard.sort((a, b) => b.score - a.score);
+
+        // keep only top 10
+        leaderboard = leaderboard.slice(0, 10);
+
+        // save back
         localStorage.setItem(key, JSON.stringify(leaderboard));
 
+        // render
         leaderboardDiv.innerHTML = `<h3>Top Civic Leaders — ${currentLevel}</h3>`;
-        leaderboard.forEach((s, i) => {
-            leaderboardDiv.innerHTML += `<p>${i + 1}. ${s} points</p>`;
+
+        leaderboard.forEach((entry, i) => {
+            leaderboardDiv.innerHTML += `<p>${i + 1}. ${entry.name} — ${entry.score} pts</p>`;
         });
     }
 
@@ -1421,13 +1445,28 @@ document.addEventListener("DOMContentLoaded", () => {
         el.classList.add("fade-in");
     }
 
-    // ---- Events ----
-    basicBtn.addEventListener("click", () => { sClick(); startLevel("Basic"); });
-    intermediaryBtn.addEventListener("click", () => {
-        if (!intermediaryBtn.disabled) { sClick(); startLevel("Intermediary"); }
+    let selectedLevelBeforeName = null; // global
+
+    basicBtn.addEventListener("click", () => {
+        sClick();
+        selectedLevelBeforeName = "Basic";
+        document.getElementById("nameModal").classList.remove("hidden");
     });
+
+    intermediaryBtn.addEventListener("click", () => {
+        if (!intermediaryBtn.disabled) {
+            sClick();
+            selectedLevelBeforeName = "Intermediary";
+            document.getElementById("nameModal").classList.remove("hidden");
+        }
+    });
+
     advanceBtn.addEventListener("click", () => {
-        if (!advanceBtn.disabled) { sClick(); startLevel("Advance"); }
+        if (!advanceBtn.disabled) {
+            sClick();
+            selectedLevelBeforeName = "Advance";
+            document.getElementById("nameModal").classList.remove("hidden");
+        }
     });
 
     prevBtn.addEventListener("click", () => { sClick(); goPrev(); });
@@ -1495,6 +1534,25 @@ document.addEventListener("DOMContentLoaded", () => {
             startLevel(lvl);
         }
     });
+
+    document.getElementById("saveNameBtn").addEventListener("click", () => {
+        const input = document.getElementById("playerNameInput");
+        const name = input.value.trim();
+
+        if (name === "" || name.toLowerCase() === "your civic name") {
+            alert("Please enter a valid name.");
+            return;
+        }
+
+        localStorage.setItem("civicName", name);
+
+        document.getElementById("nameModal").classList.add("hidden");
+        input.value = "";
+
+        startLevel(selectedLevelBeforeName);
+    });
+
+    document.getElementById("nameModal").classList.add("hidden");
 
     // ---- Init ----
     applyLocks();
