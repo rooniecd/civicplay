@@ -206,10 +206,6 @@ main {
     opacity: 0.7;
 }
 
-.quizActions {
-    margin-top: 0.6rem;
-}
-
 .actionRow {
     display: flex;
     gap: 0.6rem;
@@ -217,8 +213,15 @@ main {
     flex-wrap: wrap;
 }
 
+.quizActions {
+    margin-top: 1.2rem;
+}
+
+/* Extra spacing + visual separation to prevent accidental taps */
 .restartRow {
-    margin-top: 0.6rem;
+    margin-top: 2.4rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid #e3e3e3;
 }
 
 button {
@@ -335,15 +338,21 @@ footer a {
     margin-bottom: 12px;
 }
 
+/* Repositioned timer – stays hidden until JS shows it */
 #timerBox {
-    position: absolute;
-    top: 10px;
-    right: 10px;
+    position: fixed;
+    top: 140px;
+    /* more down */
+    left: 22px;
+    /* on the left side */
+    z-index: 9999;
+    /* DO NOT force display here */
 }
 
+/* Timer circle style */
 #timerCircle {
-    width: 42px;
-    height: 42px;
+    width: 54px;
+    height: 54px;
     border-radius: 50%;
     background: #ffffff;
     border: 3px solid #00923f;
@@ -351,8 +360,9 @@ footer a {
     justify-content: center;
     align-items: center;
     font-weight: bold;
-    font-size: 18px;
+    font-size: 22px;
     color: #00923f;
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.25);
 }
 
 #timerBox {
@@ -360,10 +370,10 @@ footer a {
 }
 
 .correctHighlight {
-    background: #b1ffd3 !important;
-    border-color: #00ab61 !important;
-    color: #003d28 !important;
-    font-weight: bold;
+    background: #a0ffbf !important;
+    border-color: #00a54f !important;
+    color: #004d28 !important;
+    font-weight: 900;
 }
 
 /* Highlight for correct answer after confirm/timeup */
@@ -375,4 +385,18 @@ footer a {
 
 .hidden {
     display: none !important;
+}
+
+/* Clear red for incorrect answer */
+.incorrectHighlight {
+    background: #ffe0e0 !important;
+    border-color: #d00000 !important;
+    color: #8b0000 !important;
+    font-weight: 700;
+}
+
+/* More readable explanation text */
+.explanation {
+    font-size: 1.05rem;
+    line-height: 1.4;
 }

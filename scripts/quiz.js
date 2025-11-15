@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let locked = [];         // boolean per question: true after NEXT
     let score = 0;
     let timerInterval = null;
-    let timeLeft = 10;
+    let timeLeft = 15;
     let timeExpired = []; // track per question
 
     function updateTimerFace(text) {
@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        timeLeft = 10;
+        timeLeft = 15;
         updateTimerFace(timeLeft);
 
         clearInterval(timerInterval);
@@ -1488,6 +1488,24 @@ document.addEventListener("DOMContentLoaded", () => {
             sSuccess();
         } else {
             sFail();
+
+            // ==============================
+            // Mark incorrect selected option
+            // ==============================
+            const wrongBtn = [...document.querySelectorAll(".optionBtn")]
+                .find(b => b.dataset.ans == selectedTemp);
+
+            if (wrongBtn) {
+                wrongBtn.classList.add("incorrectHighlight");
+            }
+
+            // OPTIONAL: highlight correct answer
+            const correctBtn = document.querySelector(
+                `[data-ans="${questions[currentIndex].c}"]`
+            );
+            if (correctBtn) {
+                correctBtn.classList.add("correctHighlight");
+            }
         }
 
         // highlight correct answer ALWAYS
